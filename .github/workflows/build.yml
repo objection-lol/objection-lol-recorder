@@ -1,0 +1,86 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version'
+        required: true
+        default: '1.0.0'
+      prerelease:
+        description: 'Is this a prerelease?'
+        type: boolean
+        default: false
+
+# Add permissions section at the workflow level
+permissions:
+  contents: write # This is needed for creating releases
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set version number
+        run: |
+          CURRENT_VERSION=$(npm run version --silent)
+          TARGET_VERSION="${{ github.event.inputs.version }}"
+          if [ "$CURRENT_VERSION" != "$TARGET_VERSION" ]; then
+            echo "Updating version from $CURRENT_VERSION to $TARGET_VERSION"
+            npm run set-version $TARGET_VERSION
+          else
+            echo "Version already set to $TARGET_VERSION, skipping update"
+          fi
+        shell: bash
+
+      - name: Build app
+        run: npm run package
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifacts
+          path: |
+            out/objection-lol-recorder-win32-x64/**/*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    # Add permissions at the job level as well
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Compress Windows artifact
+        run: |
+          cd artifacts/windows-artifacts
+          zip -r ../../objection-lol-recorder-v${{ github.event.inputs.version }}-windows.zip .
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          name: Release v${{ github.event.inputs.version }}
+          draft: true
+          prerelease: ${{ github.event.inputs.prerelease }}
+          files: |
+            objection-lol-recorder-v${{ github.event.inputs.version }}-windows.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
