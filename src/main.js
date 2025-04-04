@@ -47,7 +47,8 @@ const createWindow = async () => {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   // Set application menu to null in production
-  Menu.setApplicationMenu(null);
+  // Menu.setApplicationMenu(null);
+
   if (!isDev) {
     Menu.setApplicationMenu(null);
   }

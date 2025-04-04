@@ -4,7 +4,7 @@
   "engines": {
     "node": "^18.18.0"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An electron app to record your objection lols",
   "main": ".vite/build/main.js",
   "scripts": {

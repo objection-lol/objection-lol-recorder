@@ -148,7 +148,7 @@ export const createObjectionView = async (mainWindow, objectionId, params = {}) 
   });
 
   // Get the appropriate URL based on settings
-  const recordingUrl = getRecordingUrl(objectionId, settings?.website);
+  const recordingUrl = getRecordingUrl(objectionId);
   const volumes = getVolumesParamsFromSettings(settings);
 
   // figure out why volumes not reflecting (just once it seems it works)
@@ -293,7 +293,7 @@ export const stopCurrentRecording = async () => {
 };
 
 const getVolumesParamsFromSettings = (settings) => {
-  if (!settings || settings.website !== 'dol') {
+  if (!settings) {
     return null;
   }
 

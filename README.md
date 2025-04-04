@@ -1,13 +1,12 @@
 # Objection.lol Recorder
 
-A desktop application for recording videos from [objection.lol](https://objection.lol) and [dev.objection.lol](https://dev.objection.lol). This tool allows you to create recordings of your scene projects.
+A desktop application for recording videos from [objection.lol](https://objection.lol). This tool allows you to create recordings of your scene projects.
 
 ![Objection.lol Recorder Screenshot](assets/screenshot.png)
 
 ## Features
 
-- Support for both objection.lol and dev.objection.lol
-- Adjustable volume settings for master, music, sound effects, and blips (dev.objection.lol only)
+- Adjustable volume settings for master, music, sound effects, and blips
 - Customizable framerates (up to 60 FPS)
 - Append additional seconds to the end of recordings
 
@@ -41,7 +40,6 @@ To record with audio, you'll need to install the virtual audio capturer:
 
 Access the settings menu to configure:
 
-- Website to record from (objection.lol or dev.objection.lol)
 - Volume levels
 
 ## Development

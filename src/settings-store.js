@@ -4,7 +4,6 @@ import path from 'path';
 
 // Default settings
 const defaultSettings = {
-  website: 'ol', // ol = objection.lol, dol = dev.objection.lol
   volumes: {
     master: 100,
     music: 75,
