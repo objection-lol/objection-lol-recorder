@@ -128,58 +128,67 @@ const convertRecording = async (inputPath, outputPath, onProgress, cutDuration) 
       onProgress(0);
     }
 
-    // First get the duration of the video
-    ffmpeg.ffprobe(inputPath, (err, metadata) => {
-      if (err) {
-        console.error('Error getting video duration:', err);
-        return reject(err);
-      }
+    // Create a command that sets both FFmpeg and FFprobe paths
+    const command = ffmpeg(inputPath);
 
-      const duration = metadata.format.duration;
+    // Get video duration and other metadata without relying on ffprobe
+    command
+      .videoCodec('libx264')
+      .outputOptions(['-preset fast', '-crf 18'])
+      .output(outputPath)
+      .on('codecData', (data) => {
+        // Use the duration from codecData instead of ffprobe
+        if (data && data.duration) {
+          const durationInSeconds = convertTimeToSeconds(data.duration);
+          const trimmedDuration = Math.max(0, durationInSeconds - cutDuration);
 
-      if (!duration) {
-        console.error('Could not determine video duration');
-        return reject(new Error('Could not determine video duration'));
-      }
-
-      const trimmedDuration = Math.max(0, duration - cutDuration);
-
-      ffmpeg(inputPath)
-        .videoCodec('libx264')
-        .outputOptions(['-preset veryfast', '-crf 18', `-t ${trimmedDuration}`])
-        .output(outputPath)
-        .on('start', (cmd) => {
-          // console.log('FFmpeg conversion command:', cmd);
-        })
-        .on('progress', (progress) => {
-          if (progress.percent) {
-            const currentProgress = Math.round(progress.percent);
-
-            if (onProgress) {
-              onProgress(currentProgress);
-            }
-          }
-        })
-        .on('error', (err) => {
-          console.error('Conversion error:', err);
-          reject(err);
-        })
-        .on('end', async () => {
+          // Restart command with duration limit
+          command.outputOptions(['-t', trimmedDuration.toString()]);
+        }
+      })
+      .on('progress', (progress) => {
+        if (progress.percent) {
+          const currentProgress = Math.round(progress.percent);
           if (onProgress) {
-            onProgress(100);
+            onProgress(currentProgress);
           }
+        }
+      })
+      .on('error', (err) => {
+        console.error('Conversion error:', err);
+        reject(err);
+      })
+      .on('end', async () => {
+        if (onProgress) {
+          onProgress(100);
+        }
 
-          try {
-            await fs.unlink(inputPath);
-            resolve(outputPath);
-          } catch (err) {
-            console.error('Failed to delete temporary file:', err);
-            resolve(outputPath);
-          }
-        })
-        .run();
-    });
+        try {
+          await fs.unlink(inputPath);
+          resolve(outputPath);
+        } catch (err) {
+          console.error('Failed to delete temporary file:', err);
+          resolve(outputPath);
+        }
+      })
+      .run();
   });
+};
+
+// Helper function to convert HH:MM:SS.ms format to seconds
+const convertTimeToSeconds = (timeString) => {
+  const parts = timeString.split(':');
+  let seconds = 0;
+
+  if (parts.length === 3) {
+    seconds = parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseFloat(parts[2]);
+  } else if (parts.length === 2) {
+    seconds = parseInt(parts[0]) * 60 + parseFloat(parts[1]);
+  } else {
+    seconds = parseFloat(parts[0]);
+  }
+
+  return seconds;
 };
 
 /**
