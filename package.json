@@ -22,6 +22,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@jellybrick/dbus-next": "^0.10.3",
     "electron-squirrel-startup": "^1.0.1",
     "fluent-ffmpeg": "^2.1.3",
     "vue": "^3.5.13",
@@ -29,7 +30,6 @@
     "vuetify": "^3.7.18"
   },
   "devDependencies": {
-    "ffmpeg-static": "^5.2.0",
     "@electron-forge/cli": "^7.7.0",
     "@electron-forge/maker-deb": "^7.7.0",
     "@electron-forge/maker-rpm": "^7.7.0",
@@ -46,6 +46,7 @@
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.3",
     "eslint-plugin-vue": "^9.24.0",
+    "ffmpeg-static": "^5.2.0",
     "prettier": "^3.5.3",
     "sass": "1.86.0",
     "sass-embedded": "^1.86.0",
