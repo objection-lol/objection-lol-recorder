@@ -27,9 +27,10 @@ async function setupScreenCast() {
   await createScreenCastSession(screenCast, sessionHandleToken, requestHandleToken);
   sessionHandle = (await responseBody)[1].session_handle.value;
 
+  await selectSource(screenCast, sessionHandle);
   responseBody = new Promise((resolve, reject) => { response.set(requestHandleToken, { resolve }) });
-  await selectSource(screenCast, sessionHandle, requestHandleToken);
   startScreenCast(screenCast, sessionHandle, requestHandleToken)
+  return (await responseBody)[1].streams.value[0][0];
 }
 
 async function createScreenCastSession(cast, sessionToken, requestToken) {
@@ -40,10 +41,13 @@ async function createScreenCastSession(cast, sessionToken, requestToken) {
 
 }
 
-async function selectSource(cast, sessionHandle, requestToken) {
+async function selectSource(cast, sessionHandle) {
+  const requestToken = crypto.randomUUID().replace(/-/g, '');
   await cast.SelectSources(sessionHandle, {
     handle_token: new Variant('s', requestToken),
     persist_mode: new Variant('u', 1),
+    multiple: new Variant('b', true),
+    types: new Variant('u', 2)
   });
 }
 
