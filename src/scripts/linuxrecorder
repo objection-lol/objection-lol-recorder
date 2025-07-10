@@ -1,0 +1,14 @@
+#!/bin/bash
+# audio will be fixed later. Currently audio is only there to be there
+
+WIDTH=$2;
+HEIGHT=$3;
+gst-launch-1.0 -e \
+  pipewiresrc path=$1 do-timestamp=true ! queue ! \
+  videoconvert ! videorate ! \
+  videobox right=-$WIDTH bottom=-$HEIGHT ! \
+  video/x-raw,format=I420,framerate=60/1 ! \
+  x264enc bitrate=10000 speed-preset=superfast tune=zerolatency ! mux. \
+  pulsesrc device="alsa_output.pci-0000_00_1f.3.analog-stereo.monitor" ! queue ! \
+  audioconvert ! audioresample ! flacenc ! mux. \
+  matroskamux name=mux ! filesink location=recording.mkv

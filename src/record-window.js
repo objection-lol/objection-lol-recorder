@@ -113,37 +113,42 @@ export const createObjectionView = async (mainWindow, objectionId, params = {}) 
         console.error(error.message || 'Error during recording setup');
       }
     } else if (message === 'DONE') {
-      stopRecordingTimeout = setTimeout(
-        async () => {
-          try {
-            const temporaryFilePath = await stopRecording();
+      if (!process.env.WAYLAND_DISPLAY.includes("wayland")) {
+        stopRecordingTimeout = setTimeout(
+          async () => {
+            try {
+              const temporaryFilePath = await stopRecording();
 
-            cleanupObjectionView();
+              cleanupObjectionView();
 
-            if (temporaryFilePath) {
-              // Add progress callback
-              await finalizeRecording(
-                temporaryFilePath,
-                (progress) => {
-                  if (mainWindow && !mainWindow.isDestroyed()) {
-                    mainWindow.webContents.send('conversion-progress', progress);
-                  }
-                },
-                audioTrimDuration
-              );
+              if (temporaryFilePath) {
+                // Add progress callback
+                await finalizeRecording(
+                  temporaryFilePath,
+                  (progress) => {
+                    if (mainWindow && !mainWindow.isDestroyed()) {
+                      mainWindow.webContents.send('conversion-progress', progress);
+                    }
+                  },
+                  audioTrimDuration
+                );
+              }
+
+              if (mainWindow && !mainWindow.isDestroyed()) {
+                mainWindow.webContents.send('recording-finished');
+              }
+            } catch (err) {
+              console.error('Error stopping recording:', err);
+            } finally {
+              cleanupObjectionView();
             }
+          },
+          (recordingParams.appendSeconds + audioTrimDuration + 0.1) * 1000
+        );
 
-            if (mainWindow && !mainWindow.isDestroyed()) {
-              mainWindow.webContents.send('recording-finished');
-            }
-          } catch (err) {
-            console.error('Error stopping recording:', err);
-          } finally {
-            cleanupObjectionView();
-          }
-        },
-        (recordingParams.appendSeconds + audioTrimDuration + 0.1) * 1000
-      );
+      } else {
+
+      }
     }
   });
 

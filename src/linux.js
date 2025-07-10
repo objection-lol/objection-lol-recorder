@@ -1,5 +1,7 @@
 const dbus = require('@jellybrick/dbus-next');
 const crypto = require('crypto');
+const { spawn } = require('child_process');
+const path = require('path');
 const Variant = dbus.Variant;
 
 async function setupScreenCast() {
@@ -60,4 +62,12 @@ async function startScreenCast(cast, sessionHandle, requestToken) {
     }
   );
 }
+
+// will export
+async function startNodeRecording(width, height, fps, filePath) {
+  const pipeNode = await setupScreenCast();
+  const gstScriptPath = path.join(__dirname, 'scripts', 'linuxrecorder');
+  const gstProcess = spawn('bash', [gstScriptPath, pipeNode, width, height]);
+}
+
 
