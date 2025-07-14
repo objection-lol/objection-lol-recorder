@@ -72,7 +72,6 @@ let recorder = {
   recorderProcess: null,
 }
 
-// will export
 export async function startNodeRecording(width, height, fps, filePath) {
   const pipeNode = await setupScreenCast();
   console.log(pipeNode);
