@@ -115,7 +115,7 @@ export const startRecording = async (recordWindow, width, height, fps, filePath,
       }
     });
   } else {
-    startNodeRecording(width, height, fps, filePath);
+    await startNodeRecording(width, height, fps, filePath);
   }
 };
 

@@ -14,7 +14,8 @@
     "publish": "electron-forge publish",
     "lint": "eslint . --ext .js,.vue,.ts --fix",
     "version": "node -e \"console.log(require('./package.json').version)\"",
-    "set-version": "npm version --no-git-tag-version"
+    "set-version": "npm version --no-git-tag-version",
+    "postinstall": "patch-package"
   },
   "author": {
     "name": "objection-lol",

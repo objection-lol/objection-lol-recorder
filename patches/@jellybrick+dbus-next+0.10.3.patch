@@ -1,0 +1,59 @@
+diff --git a/node_modules/@jellybrick/dbus-next/lib/address-x11.js b/node_modules/@jellybrick/dbus-next/lib/address-x11.js
+index c4fbfa3..6bf2cf1 100644
+--- a/node_modules/@jellybrick/dbus-next/lib/address-x11.js
++++ b/node_modules/@jellybrick/dbus-next/lib/address-x11.js
+@@ -1,35 +1,34 @@
+ const fs = require('fs');
+ const os = require('os');
+ 
+-function getDbusAddressFromWindowSelection (callback) {
++function getDbusAddressFromWindowSelection(callback) {
+   // read dbus adress from window selection
+   // TODO: implement this somewhere
+-  const x11 = require('x11');
++  const x11 = null;//require('x11');
+   if (x11 === null) {
+     throw new Error('cannot get session bus address from window selection: dbus-next was installed without x11 support');
+   }
+ 
+   // read machine uuid
+-  fs.readFile('/var/lib/dbus/machine-id', 'ascii', function (err, uuid) {
++  fs.readFile('/var/lib/dbus/machine-id', 'ascii', function(err, uuid) {
+     if (err) return callback(err);
+     const hostname = os.hostname().split('-')[0];
+-    x11.createClient(function (err, display) {
++    x11.createClient(function(err, display) {
+       if (err) return callback(err);
+       const X = display.client;
+-      const selectionName = `_DBUS_SESSION_BUS_SELECTION_${
+-        hostname
+-      }_${uuid.trim()}`;
+-      X.InternAtom(false, selectionName, function (err, id) {
++      const selectionName = `_DBUS_SESSION_BUS_SELECTION_${hostname
++        }_${uuid.trim()}`;
++      X.InternAtom(false, selectionName, function(err, id) {
+         if (err) return callback(err);
+-        X.GetSelectionOwner(id, function (err, win) {
++        X.GetSelectionOwner(id, function(err, win) {
+           if (err) return callback(err);
+-          X.InternAtom(false, '_DBUS_SESSION_BUS_ADDRESS', function (
++          X.InternAtom(false, '_DBUS_SESSION_BUS_ADDRESS', function(
+             err,
+             propId
+           ) {
+             if (err) return callback(err);
+             win = display.screen[0].root;
+-            X.GetProperty(0, win, propId, 0, 0, 10000000, function (err, val) {
++            X.GetProperty(0, win, propId, 0, 0, 10000000, function(err, val) {
+               if (err) return callback(err);
+               callback(null, val.data.toString());
+             });
+@@ -40,7 +39,7 @@ function getDbusAddressFromWindowSelection (callback) {
+   });
+ }
+ 
+-function getDbusAddressFromFs () {
++function getDbusAddressFromFs() {
+   const home = process.env.HOME;
+   const display = process.env.DISPLAY;
+   if (!display) {

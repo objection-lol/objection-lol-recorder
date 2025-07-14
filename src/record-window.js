@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import { finalizeRecording, startRecording, stopRecording } from './recording';
 import { loadSettings } from './settings-store';
 import { audioTrimDuration, getRecordingUrl } from './utils';
+import { stopNodeRecording } from './linux';
 
 let recordWindow;
 let view;
@@ -147,7 +148,7 @@ export const createObjectionView = async (mainWindow, objectionId, params = {}) 
         );
 
       } else {
-
+        await stopNodeRecording();
       }
     }
   });

@@ -1,8 +1,11 @@
-const dbus = require('@jellybrick/dbus-next');
-const crypto = require('crypto');
-const { spawn } = require('child_process');
-const path = require('path');
+import dbus from '@jellybrick/dbus-next';
+import crypto from 'crypto';
+import { spawn, exec } from 'child_process';
+import path from 'path';
+import { app } from 'electron';
+
 const Variant = dbus.Variant;
+
 
 async function setupScreenCast() {
   const bus = dbus.sessionBus();
@@ -12,6 +15,7 @@ async function setupScreenCast() {
   const requestHandleToken = crypto.randomUUID().replace(/-/g, '');
   const sessionHandleToken = crypto.randomUUID().replace(/-/g, '');
   const requestHandle = `/org/freedesktop/portal/desktop/request/${sender}/${requestHandleToken}`;
+  let sessionHandle;
 
   let response = new Map();
   bus.on('message', (message) => {
@@ -24,6 +28,7 @@ async function setupScreenCast() {
       response.delete(requestHandleToken);
     }
   });
+
 
   let responseBody = new Promise((resolve, reject) => { response.set(requestHandleToken, { resolve }) });
   await createScreenCastSession(screenCast, sessionHandleToken, requestHandleToken);
@@ -48,7 +53,7 @@ async function selectSource(cast, sessionHandle) {
   await cast.SelectSources(sessionHandle, {
     handle_token: new Variant('s', requestToken),
     persist_mode: new Variant('u', 1),
-    multiple: new Variant('b', true),
+    multiple: new Variant('b', false),
     types: new Variant('u', 2)
   });
 }
@@ -63,11 +68,23 @@ async function startScreenCast(cast, sessionHandle, requestToken) {
   );
 }
 
-// will export
-async function startNodeRecording(width, height, fps, filePath) {
-  const pipeNode = await setupScreenCast();
-  const gstScriptPath = path.join(__dirname, 'scripts', 'linuxrecorder');
-  const gstProcess = spawn('bash', [gstScriptPath, pipeNode, width, height]);
+let recorder = {
+  recorderProcess: null,
 }
 
+// will export
+export async function startNodeRecording(width, height, fps, filePath) {
+  const pipeNode = await setupScreenCast();
+  console.log(pipeNode);
+  const gstScriptPath = path.join(app.getAppPath(), 'src', 'scripts', 'linuxrecorder');
+  recorder.recorderProcess = spawn('bash', [gstScriptPath, pipeNode, width, height, filePath]);
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  return
+}
+
+export async function stopNodeRecording() {
+  const execPromise = util.promisify(exec);
+  recorder.recorderProcess.kill()
+  await execPromise('pkill -f gst-launch-1.0');
+}
 
