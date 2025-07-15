@@ -10,7 +10,7 @@ NODE="$1"
 CROP_W="$2"
 CROP_H="$3"
 TMP="$4"
-OUT="~/Documents/obj-recording.mp4"
+OUT="$HOME/Documents/obj-recording.mp4"
 
 # Audio source should be properly given to the script later. This had audio just as a test
 gst-launch-1.0 -e \

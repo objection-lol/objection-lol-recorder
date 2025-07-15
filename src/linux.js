@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { spawn, exec } from 'child_process';
 import path from 'path';
 import { app } from 'electron';
+const util = require('util');
 
 const Variant = dbus.Variant;
 
@@ -83,7 +84,9 @@ export async function startNodeRecording(width, height, fps, filePath) {
 
 export async function stopNodeRecording() {
   const execPromise = util.promisify(exec);
-  recorder.recorderProcess.kill()
-  await execPromise('pkill -f gst-launch-1.0');
+  await execPromise('pkill -SIGINT -f gst-launch-1.0');
+  await new Promise((resolve) => {
+    recorder.recorderProcess.on('close', resolve);
+  })
 }
 

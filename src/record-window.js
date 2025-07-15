@@ -148,7 +148,17 @@ export const createObjectionView = async (mainWindow, objectionId, params = {}) 
         );
 
       } else {
-        await stopNodeRecording();
+        try {
+          await stopNodeRecording();
+          cleanupObjectionView();
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('recording-finished');
+          }
+        } catch (err) {
+          console.error('Error stopping recording', err)
+        } finally {
+          cleanupObjectionView();
+        }
       }
     }
   });
