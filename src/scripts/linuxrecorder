@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ "$#" -ne 4 ]; then
-  echo "Usage: $0 <PIPEWIRE_NODE_ID> <CROP_WIDTH> <CROP_HEIGHT>" >&2
+if [ "$#" -ne 5 ]; then
+  echo "Usage: $0 <PIPEWIRE_NODE_ID> <CROP_WIDTH> <CROP_HEIGHT> <FPS>" >&2
   exit 1
 fi
 
@@ -10,17 +10,20 @@ NODE="$1"
 CROP_W="$2"
 CROP_H="$3"
 TMP="$4"
+FPS="$5/1"
 OUT="$HOME/Documents/obj-recording.mp4"
 
-# Audio source should be properly given to the script later. This had audio just as a test
+# Audio source should be properly provided to the script later. This had audio just as a test
 gst-launch-1.0 -e \
-  pipewiresrc path="$NODE" do-timestamp=true ! queue ! \
+  pipewiresrc path="$VIDEO_NODE" do-timestamp=true ! queue ! \
     videoconvert ! videorate ! \
-    video/x-raw,format=I420,framerate=60/1 ! \
+    video/x-raw,format=I420,framerate=$FPS ! \
     x264enc bitrate=10000 speed-preset=superfast tune=zerolatency ! queue ! mux. \
-  pulsesrc device="alsa_output.pci-0000_00_1f.3.analog-stereo.monitor" ! queue ! \
+  pipewiresrc path="$AUDIO_NODE" do-timestamp=true ! queue ! \
+    audio/x-raw,format=S16LE,channels=2,rate=48000 ! \
     audioconvert ! audioresample ! flacenc ! queue ! mux. \
   matroskamux name=mux ! filesink location="$TMP"
+
 
 ffmpeg -y -i "$TMP" \
   -filter:v "crop=${CROP_W}:${CROP_H}:0:0" \
@@ -29,4 +32,6 @@ ffmpeg -y -i "$TMP" \
   "$OUT"
 
 rm -f "$TMP"
+
+echo "ALL DONE"
 

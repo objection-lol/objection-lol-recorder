@@ -2,7 +2,8 @@ import dbus from '@jellybrick/dbus-next';
 import crypto from 'crypto';
 import { spawn, exec } from 'child_process';
 import path from 'path';
-import { app } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
+import { encode } from 'punycode';
 const util = require('util');
 
 const Variant = dbus.Variant;
@@ -71,21 +72,56 @@ async function startScreenCast(cast, sessionHandle, requestToken) {
 
 let recorder = {
   recorderProcess: null,
+  progressWindow: null,
+}
+
+function createProgressWindow() {
+  recorder.progressWindow = new BrowserWindow({
+    width: 800,
+    height: 400,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    }
+  });
+
+  const progressPage = `
+    <!DOCTYPE html>
+    <html>
+    <body style="margin:0">
+      <pre id="out"></pre>
+    <script>
+      const { ipcRenderer } = require('electron');
+      ipcRenderer.on('stdout-chunk', (_, chunk) => {
+        const pre = document.getElementById('out');
+        pre.innerText += chunk;
+        pre.scrollTop = pre.scrollHeight;
+      });
+    </script>
+    </body>
+    </html>`;
+
+  recorder.progressWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(progressPage));
 }
 
 export async function startNodeRecording(width, height, fps, filePath) {
   const pipeNode = await setupScreenCast();
   console.log(pipeNode);
   const gstScriptPath = path.join(app.getAppPath(), 'src', 'scripts', 'linuxrecorder');
-  recorder.recorderProcess = spawn('bash', [gstScriptPath, pipeNode, width, height, filePath]);
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  recorder.recorderProcess = spawn('bash', [
+      gstScriptPath, pipeNode, width, height, filePath, fps
+    ]);
   return
 }
 
 export async function stopNodeRecording() {
   const execPromise = util.promisify(exec);
   await execPromise('pkill -SIGINT -f gst-launch-1.0');
+  createProgressWindow();
   await new Promise((resolve) => {
+    recorder.recorderProcess.stdout.on('data', data => {
+      recorder.progressWindow.webContents.send('stdout-chunk', data.toString());
+    })
     recorder.recorderProcess.on('close', resolve);
   })
 }
