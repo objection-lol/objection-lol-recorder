@@ -2,29 +2,34 @@
 set -euo pipefail
 
 if [ "$#" -ne 5 ]; then
-  echo "Usage: $0 <PIPEWIRE_NODE_ID> <CROP_WIDTH> <CROP_HEIGHT> <FPS>" >&2
+  echo "Usage: $0 <PIPEWIRE_VIDEO_NODE_ID> <CROP_WIDTH> <CROP_HEIGHT> <TMP_FILE> <FPS>" >&2
   exit 1
 fi
 
-NODE="$1"
+VIDEO_NODE="$1"
 CROP_W="$2"
 CROP_H="$3"
 TMP="$4"
 FPS="$5/1"
-OUT="$HOME/Documents/obj-recording.mp4"
 
-# Audio source should be properly provided to the script later. This had audio just as a test
+MONITOR_SRC=$(
+  pactl list short sources \
+    | awk '/\.monitor/ { print $2; exit }'
+)
+
+notify-send "Using audio source: $MONITOR_SRC"
+
 gst-launch-1.0 -e \
   pipewiresrc path="$VIDEO_NODE" do-timestamp=true ! queue ! \
     videoconvert ! videorate ! \
-    video/x-raw,format=I420,framerate=$FPS ! \
+    video/x-raw,format=I420,framerate="$FPS" ! \
     x264enc bitrate=10000 speed-preset=superfast tune=zerolatency ! queue ! mux. \
-  pipewiresrc path="$AUDIO_NODE" do-timestamp=true ! queue ! \
+  pulsesrc device="$MONITOR_SRC" do-timestamp=true ! queue ! \
     audio/x-raw,format=S16LE,channels=2,rate=48000 ! \
     audioconvert ! audioresample ! flacenc ! queue ! mux. \
   matroskamux name=mux ! filesink location="$TMP"
 
-
+OUT="$HOME/Documents/obj-recording.mp4"
 ffmpeg -y -i "$TMP" \
   -filter:v "crop=${CROP_W}:${CROP_H}:0:0" \
   -c:v libx264 -preset superfast -crf 23 \
@@ -32,6 +37,4 @@ ffmpeg -y -i "$TMP" \
   "$OUT"
 
 rm -f "$TMP"
-
-echo "ALL DONE"
-
+echo "ALL DONE — saved to $OUT"
