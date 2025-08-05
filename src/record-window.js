@@ -149,6 +149,7 @@ export const createObjectionView = async (mainWindow, objectionId, params = {}) 
 
       } else {
         try {
+          await new Promise(r => setTimeout(r, 2000));
           await stopNodeRecording();
           cleanupObjectionView();
           if (mainWindow && !mainWindow.isDestroyed()) {

@@ -12,24 +12,22 @@ CROP_H="$3"
 TMP="$4"
 FPS="$5/1"
 
-MONITOR_SRC=$(
-  pactl list short sources \
-    | awk '/\.monitor/ { print $2; exit }'
-)
-
-notify-send "Using audio source: $MONITOR_SRC"
+DEFAULT_SINK=$(pactl get-default-sink)
+MONITOR_SRC="${DEFAULT_SINK}.monitor"
 
 gst-launch-1.0 -e \
   pipewiresrc path="$VIDEO_NODE" do-timestamp=true ! queue ! \
     videoconvert ! videorate ! \
     video/x-raw,format=I420,framerate="$FPS" ! \
-    x264enc bitrate=10000 speed-preset=superfast tune=zerolatency ! queue ! mux. \
+    x264enc pass=qual quantizer=18 speed-preset=medium ! queue ! mux. \
   pulsesrc device="$MONITOR_SRC" do-timestamp=true ! queue ! \
     audio/x-raw,format=S16LE,channels=2,rate=48000 ! \
-    audioconvert ! audioresample ! flacenc ! queue ! mux. \
+    audioconvert ! audioresample ! opusenc ! queue ! mux. \
   matroskamux name=mux ! filesink location="$TMP"
 
-OUT="$HOME/Documents/obj-recording.mp4"
+
+timestamp=$(date '+%F_%H_%M')
+OUT="$HOME/Documents/obj-recording_$timestamp.mp4"
 ffmpeg -y -i "$TMP" \
   -filter:v "crop=${CROP_W}:${CROP_H}:0:0" \
   -c:v libx264 -preset superfast -crf 23 \
@@ -37,4 +35,4 @@ ffmpeg -y -i "$TMP" \
   "$OUT"
 
 rm -f "$TMP"
-echo "ALL DONE — saved to $OUT"
+echo "ALL DONE #!#!# saved to $OUT"
