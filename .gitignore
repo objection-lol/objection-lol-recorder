@@ -91,4 +91,8 @@ typings/
 # Electron-Forge
 out/
 
+# Distribution outputs
+dist/
+
 settings.json
+components.d.ts

@@ -17,6 +17,28 @@
     "set-version": "npm version --no-git-tag-version",
     "postinstall": "patch-package"
   },
+  "build": {
+    "appId": "lol.objection_recorder.app",
+    "productName": "objection-lol-recorder",
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*",
+      ".vite/build/**/*",
+      ".vite/renderer/**/*",
+      "src/scripts/linuxrecorder"
+    ],
+    "asarUnpack": [
+      "src/scripts/linuxrecorder"
+    ],
+    "directories": {
+      "buildResources": "build"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ]
+    }
+  },
   "author": {
     "name": "objection-lol",
     "email": "71948517+objection-lol@users.noreply.github.com"
@@ -44,6 +66,7 @@
     "@mdi/font": "^7.4.47",
     "@vitejs/plugin-vue": "^5.2.3",
     "electron": "35.0.2",
+    "electron-builder": "^26.0.12",
     "eslint": "^9.22.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.3",

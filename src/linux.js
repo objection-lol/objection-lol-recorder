@@ -106,7 +106,8 @@ function createProgressWindow() {
 
 export async function startNodeRecording(width, height, fps, filePath) {
   const pipeNode = await setupScreenCast();
-  const gstScriptPath = path.join(app.getAppPath(), 'src', 'scripts', 'linuxrecorder');
+  const basePath = !app.isPackaged ? app.getAppPath() : path.join(process.resourcesPath, 'app.asar.unpacked');
+  const gstScriptPath = path.join(basePath, 'src', 'scripts', 'linuxrecorder');
   recorder.recorderProcess = spawn('bash', [
       gstScriptPath, pipeNode, width, height, filePath, fps
     ]);
