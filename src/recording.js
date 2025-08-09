@@ -44,7 +44,7 @@ export const startRecording = async (recordWindow, width, height, fps, filePath,
     throw new Error('No output path specified');
   }
 
-  if (!process.env.WAYLAND_DISPLAY.includes("wayland")) {
+  if (!process.env.WAYLAND_DISPLAY?.includes("wayland")) {
     return new Promise(async (resolve, reject) => {
       try {
         outputPath = filePath;

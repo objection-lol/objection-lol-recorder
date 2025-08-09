@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { spawn, exec } from 'child_process';
 import path from 'path';
 import { app, BrowserWindow, ipcMain } from 'electron';
-import { encode } from 'punycode';
+
 const util = require('util');
 
 const Variant = dbus.Variant;
@@ -38,7 +38,7 @@ async function setupScreenCast() {
 
   await selectSource(screenCast, sessionHandle);
   responseBody = new Promise((resolve, reject) => { response.set(requestHandleToken, { resolve }) });
-  startScreenCast(screenCast, sessionHandle, requestHandleToken)
+  startScreenCast(screenCast, sessionHandle, requestHandleToken);
   return (await responseBody)[1].streams.value[0][0];
 }
 

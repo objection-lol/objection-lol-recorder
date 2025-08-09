@@ -114,7 +114,7 @@ export const createObjectionView = async (mainWindow, objectionId, params = {}) 
         console.error(error.message || 'Error during recording setup');
       }
     } else if (message === 'DONE') {
-      if (!process.env.WAYLAND_DISPLAY.includes("wayland")) {
+      if (!process.env.WAYLAND_DISPLAY?.includes("wayland")) {
         stopRecordingTimeout = setTimeout(
           async () => {
             try {
