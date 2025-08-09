@@ -17,8 +17,8 @@ MONITOR_SRC="${DEFAULT_SINK}.monitor"
 
 gst-launch-1.0 -e \
   pipewiresrc path="$VIDEO_NODE" do-timestamp=true ! queue ! \
-    videoconvert ! videorate ! \
-    video/x-raw,format=I420,framerate="$FPS" ! \
+    videoconvert ! \
+    video/x-raw,format=I420! \
     x264enc pass=qual quantizer=18 speed-preset=medium ! queue ! mux. \
   pulsesrc device="$MONITOR_SRC" do-timestamp=true ! queue ! \
     audio/x-raw,format=S16LE,channels=2,rate=48000 ! \
@@ -29,7 +29,7 @@ gst-launch-1.0 -e \
 timestamp=$(date '+%F_%H_%M')
 OUT="$HOME/Documents/obj-recording_$timestamp.mp4"
 ffmpeg -y -i "$TMP" \
-  -filter:v "crop=${CROP_W}:${CROP_H}:0:0" \
+  -filter:v "crop=${CROP_W}:${CROP_H}:0:0,fps=$FPS" \
   -c:v libx264 -preset superfast -crf 23 \
   -c:a copy \
   "$OUT"
