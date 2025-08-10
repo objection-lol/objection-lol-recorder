@@ -116,7 +116,7 @@ export async function startNodeRecording(width, height, fps, filePath) {
 
 export async function stopNodeRecording() {
   const execPromise = util.promisify(exec);
-  await execPromise('pkill -SIGINT -f gst-launch-1.0');
+  await execPromise('pkill -SIGINT gst-launch-1.0');
   createProgressWindow();
   await new Promise((resolve) => {
     recorder.recorderProcess.stdout.on('data', data => {

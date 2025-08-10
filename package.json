@@ -2,7 +2,7 @@
   "name": "objection-lol-recorder",
   "productName": "objection-lol-recorder",
   "engines": {
-    "node": "^20.9.4"
+    "node": "^20.19.4"
   },
   "version": "1.0.2",
   "description": "An electron app to record your objection lols",

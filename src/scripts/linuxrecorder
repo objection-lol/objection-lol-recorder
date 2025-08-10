@@ -18,21 +18,44 @@ MONITOR_SRC="${DEFAULT_SINK}.monitor"
 gst-launch-1.0 -e \
   pipewiresrc path="$VIDEO_NODE" do-timestamp=true ! queue ! \
     videoconvert ! \
-    video/x-raw,format=I420! \
-    x264enc pass=qual quantizer=18 speed-preset=medium ! queue ! mux. \
+    video/x-raw,format=I420 ! \
+    x264enc pass=qual quantizer=0 speed-preset=superfast tune=zerolatency ! queue ! mux. \
   pulsesrc device="$MONITOR_SRC" do-timestamp=true ! queue ! \
     audio/x-raw,format=S16LE,channels=2,rate=48000 ! \
     audioconvert ! audioresample ! opusenc ! queue ! mux. \
-  matroskamux name=mux ! filesink location="$TMP"
+  matroskamux name=mux ! filesink location="$TMP" || true
 
+
+
+echo "Recording stopped. Starting FFmpeg processing..."
+echo "Processing 1: Converting video to a stable frame rate"
+
+CFR_TMP="/tmp/video_cfr.mp4"
+ffmpeg -y -i "$TMP" \
+  -vf "crop=${CROP_W}:${CROP_H}:0:0,setpts=PTS-STARTPTS" \
+  -r "$FPS" -an "$CFR_TMP"
+
+echo "Processing 2: Combining video with synchronized audio"
 
 timestamp=$(date '+%F_%H_%M')
-OUT="$HOME/Documents/obj-recording_$timestamp.mp4"
-ffmpeg -y -i "$TMP" \
-  -filter:v "crop=${CROP_W}:${CROP_H}:0:0,fps=$FPS" \
-  -c:v libx264 -preset superfast -crf 23 \
-  -c:a copy \
+OUT="$HOME/Documents/recording_$timestamp.mp4"
+
+ffmpeg -y -i "$CFR_TMP" -i "$TMP" \
+  -c:v copy \
+  -af "aresample" -c:a aac -b:a 192k \
+  -map 0:v:0 -map 1:a:0 \
   "$OUT"
 
+if [[ -z "$TMP" || "$TMP" == "/" || "$TMP" == "$HOME" ]]; then
+    echo "ATTENTION: Temporary path \$TMP is unsafe ('$TMP'). Aborting cleanup."
+    exit 1
+fi
+if [[ -z "$CFR_TMP" || "$CFR_TMP" == "/" || "$CFR_TMP" == "$HOME" ]]; then
+    echo "ATTENTION: Temporary path \$CFR_TMP is unsafe ('$CFR_TMP'). Aborting cleanup."
+    exit 1
+fi
+
 rm -f "$TMP"
+rm -f "$CFR_TMP"
+
 echo "ALL DONE #!#!# saved to $OUT"
