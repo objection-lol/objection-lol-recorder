@@ -117,28 +117,37 @@ export const createObjectionView = async (mainWindow, objectionId, params = {}) 
       stopRecordingTimeout = setTimeout(
         async () => {
           try {
-            if (!process.env.WAYLAND_DISPLAY?.includes("wayland")) {
-              const temporaryFilePath = await stopRecording();
+            switch (process.platform) {
+              case 'win32': {
+                const temporaryFilePath = await stopRecording();
+                cleanupObjectionView();
 
-              cleanupObjectionView();
-
-              if (temporaryFilePath) {
-                // Add progress callback
-                await finalizeRecording(
-                  temporaryFilePath,
-                  (progress) => {
-                    if (mainWindow && !mainWindow.isDestroyed()) {
-                      mainWindow.webContents.send('conversion-progress', progress);
-                    }
-                  },
-                  audioTrimDuration
-                );
+                if (temporaryFilePath) {
+                  await finalizeRecording(
+                    temporaryFilePath,
+                    (progress) => {
+                      if (mainWindow && !mainWindow.isDestroyed()) {
+                        mainWindow.webContents.send('conversion-progress', progress);
+                      }
+                    },
+                    audioTrimDuration
+                  );
+                }
+                break;
               }
-            } else {
-              stopNodeRecording();
-              cleanupObjectionView();
-            }
 
+              case 'linux': {
+                stopNodeRecording();
+                cleanupObjectionView();
+                break;
+              }
+
+              default: {
+                console.warn(`Unsupported platform detected: ${process.platform}`);
+                cleanupObjectionView();
+                break;
+              }
+            }
             if (mainWindow && !mainWindow.isDestroyed()) {
               mainWindow.webContents.send('recording-finished');
             }
