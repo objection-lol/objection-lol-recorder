@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import { finalizeRecording, startRecording, stopRecording } from './recording';
 import { loadSettings } from './settings-store';
 import { audioTrimDuration, getRecordingUrl } from './utils';
+import { stopNodeRecording } from './linux';
 
 let recordWindow;
 let view;
@@ -116,23 +117,37 @@ export const createObjectionView = async (mainWindow, objectionId, params = {}) 
       stopRecordingTimeout = setTimeout(
         async () => {
           try {
-            const temporaryFilePath = await stopRecording();
+            switch (process.platform) {
+              case 'win32': {
+                const temporaryFilePath = await stopRecording();
+                cleanupObjectionView();
 
-            cleanupObjectionView();
+                if (temporaryFilePath) {
+                  await finalizeRecording(
+                    temporaryFilePath,
+                    (progress) => {
+                      if (mainWindow && !mainWindow.isDestroyed()) {
+                        mainWindow.webContents.send('conversion-progress', progress);
+                      }
+                    },
+                    audioTrimDuration
+                  );
+                }
+                break;
+              }
 
-            if (temporaryFilePath) {
-              // Add progress callback
-              await finalizeRecording(
-                temporaryFilePath,
-                (progress) => {
-                  if (mainWindow && !mainWindow.isDestroyed()) {
-                    mainWindow.webContents.send('conversion-progress', progress);
-                  }
-                },
-                audioTrimDuration
-              );
+              case 'linux': {
+                stopNodeRecording();
+                cleanupObjectionView();
+                break;
+              }
+
+              default: {
+                console.warn(`Unsupported platform detected: ${process.platform}`);
+                cleanupObjectionView();
+                break;
+              }
             }
-
             if (mainWindow && !mainWindow.isDestroyed()) {
               mainWindow.webContents.send('recording-finished');
             }
@@ -144,6 +159,7 @@ export const createObjectionView = async (mainWindow, objectionId, params = {}) 
         },
         (recordingParams.appendSeconds + audioTrimDuration + 0.1) * 1000
       );
+
     }
   });
 

@@ -1,3 +1,18 @@
+**CONTENTS**
+1. [Introduction](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#objectionlol-recorder)
+2. [Installation](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#installation)
+   1. [Windows](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#windows)
+   2. [Linux](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#linux)
+      1. [Debian / Ubuntu / Linux Mint](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#debian--ubuntu--linux-mint)
+      2. [Fedora](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#fedora)
+      3. [Arch Linux / Manjaro](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#arch-linux--manjaro)
+      4. [openSUSE (Tumbleweed and Leap)](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#opensuse-tumbleweed-and-leap)
+      5. [Gentoo](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#gentoo)
+4. [Development](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#development)
+5. [Contributing](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#contributing)
+6. [License](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#license)
+7. [Acknowledgements](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#acknowledgments)
+
 # Objection.lol Recorder
 
 A desktop application for recording videos from [objection.lol](https://objection.lol). This tool allows you to create recordings of your scene projects.
@@ -22,9 +37,108 @@ The application includes its own bundled version of FFmpeg, so no additional ins
 
 ### Audio Recording Setup
 
-To record with audio, you'll need to install the virtual audio capturer:
+On Windows, to record with audio you'll need to install the virtual audio capturer:
 
 1. Download and install [screen-capture-recorder](https://github.com/rdp/screen-capture-recorder-to-video-windows-free/releases)
+
+On Linux, make sure to either have pulseaudio or pipewire-pulseaudio installed.
+
+### Linux
+On Linux, the program is provided as an AppImage. While this executable is distro-agnostic, it currently
+still requires you to install ffmpeg, and gstreamer with it's relevant codecs and plugins. You can contribute by
+packaging these tools in the AppImage.
+
+Verify installation:
+
+```bash
+ffmpeg -version
+gst-launch-1.0 --version
+```
+
+---
+
+#### Debian / Ubuntu / Linux Mint
+
+```bash
+sudo apt update
+sudo apt install -y ffmpeg \
+  gstreamer1.0-tools \
+  gstreamer1.0-plugins-base \
+  gstreamer1.0-plugins-good \
+  gstreamer1.0-plugins-bad \
+  gstreamer1.0-plugins-ugly \
+  gstreamer1.0-libav
+```
+
+#### Fedora
+
+```bash
+sudo dnf install -y ffmpeg ffmpeg-libs \
+  gstreamer1 \
+  gstreamer1-plugins-base \
+  gstreamer1-plugins-good \
+  gstreamer1-plugins-bad-free \
+  gstreamer1-plugins-bad-freeworld \
+  gstreamer1-plugins-ugly \
+  gstreamer1-libav
+```
+
+> Note: `rpmfusion` repository is required for some of the plugins:
+
+```bash
+sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm && sudo dnf swap ffmpeg-free ffmpeg --allowerasing
+```
+
+#### Arch Linux / Manjaro
+
+```bash
+sudo pacman -Sy --noconfirm ffmpeg \
+  gstreamer \
+  gst-plugins-base \
+  gst-plugins-good \
+  gst-plugins-bad \
+  gst-plugins-ugly \
+  gst-libav
+```
+
+#### openSUSE (Tumbleweed and Leap)
+
+```bash
+sudo zypper refresh
+sudo zypper install -y ffmpeg-5 \
+  gstreamer \
+  gstreamer-plugins-base \
+  gstreamer-plugins-good \
+  gstreamer-plugins-bad \
+  gstreamer-plugins-ugly \
+  gstreamer-libav
+```
+
+> For proprietary codecs, add Packman repo:
+
+```bash
+sudo zypper ar -cfp 90 https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/ packman
+sudo zypper dup --from packman --allow-vendor-change
+```
+
+#### Gentoo
+
+Add the required USE flags in `/etc/portage/package.use`:
+
+```bash
+echo "media-video/ffmpeg X aac alsa encode mp3 theora threads vorbis x264 x265" >> /etc/portage/package.use/ffmpeg
+```
+
+```bash
+emerge --ask media-video/ffmpeg
+emerge --ask media-libs/gstreamer \
+  media-plugins/gst-plugins-base \
+  media-plugins/gst-plugins-good \
+  media-plugins/gst-plugins-bad \
+  media-plugins/gst-plugins-ugly \
+  media-plugins/gst-plugins-libav
+```
+
 
 ## Usage
 
@@ -74,13 +188,16 @@ npm run package
 ## Platform Support
 
 - Windows: Fully supported
-- macOS/Linux: Not currently supported, but contributions are welcome to add support
+- Linux: *Partially supported
+- MacOS: Currently unsupported, but contributions to add support are welcome.
+
+*: Custom delay in seconds is unsupported. Recording with audio and video is supported.
 
 ## Contributing
 
 Contributions are welcome! Here are some ways you can contribute:
 
-1. Implement macOS or Linux support
+1. Implement macOS or improve Linux support
 2. Add new features or improve existing ones
 3. Fix bugs
 4. Improve documentation

@@ -2,7 +2,7 @@
   "name": "objection-lol-recorder",
   "productName": "objection-lol-recorder",
   "engines": {
-    "node": "^18.18.0"
+    "node": "^20.19.4"
   },
   "version": "1.0.2",
   "description": "An electron app to record your objection lols",
@@ -14,7 +14,30 @@
     "publish": "electron-forge publish",
     "lint": "eslint . --ext .js,.vue,.ts --fix",
     "version": "node -e \"console.log(require('./package.json').version)\"",
-    "set-version": "npm version --no-git-tag-version"
+    "set-version": "npm version --no-git-tag-version",
+    "postinstall": "patch-package"
+  },
+  "build": {
+    "appId": "lol.objection_recorder.app",
+    "productName": "objection-lol-recorder",
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*",
+      ".vite/build/**/*",
+      ".vite/renderer/**/*",
+      "src/scripts/linuxrecorder"
+    ],
+    "asarUnpack": [
+      "src/scripts/linuxrecorder"
+    ],
+    "directories": {
+      "buildResources": "build"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ]
+    }
   },
   "author": {
     "name": "objection-lol",
@@ -22,14 +45,15 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@jellybrick/dbus-next": "^0.10.3",
     "electron-squirrel-startup": "^1.0.1",
     "fluent-ffmpeg": "^2.1.3",
+    "patch-package": "^8.0.0",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0",
     "vuetify": "^3.7.18"
   },
   "devDependencies": {
-    "ffmpeg-static": "^5.2.0",
     "@electron-forge/cli": "^7.7.0",
     "@electron-forge/maker-deb": "^7.7.0",
     "@electron-forge/maker-rpm": "^7.7.0",
@@ -42,10 +66,12 @@
     "@mdi/font": "^7.4.47",
     "@vitejs/plugin-vue": "^5.2.3",
     "electron": "35.0.2",
+    "electron-builder": "^26.0.12",
     "eslint": "^9.22.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.3",
     "eslint-plugin-vue": "^9.24.0",
+    "ffmpeg-static": "^5.2.0",
     "prettier": "^3.5.3",
     "sass": "1.86.0",
     "sass-embedded": "^1.86.0",

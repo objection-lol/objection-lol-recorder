@@ -4,13 +4,14 @@ import fs from 'fs/promises';
 import path from 'path';
 import { ffmpegPath } from './ffmpeg.js';
 import { getRecordingArgs } from './recording-args.js';
+import { startNodeRecording } from './linux.js';
 
 let recording = null;
 let outputPath = '';
 let tempOutputPath = '';
 let ffmpegProcess = null;
 
-ffmpeg.prototype.killGracefully = function () {
+ffmpeg.prototype.killGracefully = function() {
   if (this.ffmpegProc) {
     this.ffmpegProc.stdin.write('q\n');
     this.ffmpegProc.stdin.end();
@@ -42,76 +43,70 @@ export const startRecording = async (recordWindow, width, height, fps, filePath,
   if (!filePath) {
     throw new Error('No output path specified');
   }
+  
+  switch (process.platform) {
+    case 'win32':
+      return new Promise(async (resolve, reject) => {
+        try {
+          outputPath = filePath;
+          tempOutputPath = path.join(path.dirname(outputPath), `temp_${path.basename(outputPath)}`);
 
-  return new Promise(async (resolve, reject) => {
-    try {
-      outputPath = filePath;
-      // Create a temporary file for the lossless capture
-      tempOutputPath = path.join(path.dirname(outputPath), `temp_${path.basename(outputPath)}`);
+          const dirPath = path.dirname(outputPath);
+          await fs.mkdir(dirPath, { recursive: true });
 
-      const dirPath = path.dirname(outputPath);
+          const ffmpegArgs = getRecordingArgs(recordWindow, width, height, fps, tempOutputPath, hasAudio);
+          ffmpegProcess = spawn(ffmpegPath, ffmpegArgs);
+          recording = {};
 
-      await fs.mkdir(dirPath, { recursive: true });
+          let stderr = '';
+          ffmpegProcess.stderr.on('data', (data) => {
+            stderr += data.toString();
+          });
 
-      // Get all FFmpeg arguments from the recording-args module
-      const ffmpegArgs = getRecordingArgs(recordWindow, width, height, fps, tempOutputPath, hasAudio);
+          ffmpegProcess.on('error', (err) => {
+            recording = null;
+            ffmpegProcess = null;
+            console.error('Recording error:', err);
+            if (onError) onError(err);
+            reject(err);
+          });
 
-      // Spawn FFmpeg process
-      ffmpegProcess = spawn(ffmpegPath, ffmpegArgs);
+          ffmpegProcess.on('exit', (code, signal) => {
+            recording = null;
+            ffmpegProcess = null;
+            if (code !== 0) {
+              const error = new Error(`FFmpeg exited with code ${code} (${signal}): ${stderr}`);
+              console.error(error.message);
+              onError?.(error);
+            }
+          });
 
-      recording = {};
+          recording.killGracefully = function() {
+            if (ffmpegProcess) {
+              ffmpegProcess.stdin.write('q\n');
+              ffmpegProcess.stdin.end();
+            } else {
+              console.error('FFmpeg process not started yet.');
+            }
+          };
 
-      let stderr = '';
-
-      ffmpegProcess.stderr.on('data', (data) => {
-        const chunk = data.toString();
-        stderr += chunk;
-      });
-
-      ffmpegProcess.on('error', (err) => {
-        recording = null;
-        ffmpegProcess = null;
-
-        console.error('Recording error:', err);
-
-        if (onError) onError(err);
-
-        reject(err);
-      });
-
-      ffmpegProcess.on('exit', (code, signal) => {
-        recording = null;
-        ffmpegProcess = null;
-
-        if (code !== 0) {
-          const error = new Error(`FFmpeg exited with code ${code} (${signal}): ${stderr}`);
-
-          console.error(error.message);
-
-          onError?.(error);
+          setTimeout(() => resolve(outputPath), 150);
+        } catch (error) {
+          recording = null;
+          if (onError) onError(error);
+          reject(new Error(`Failed to start recording: ${error.message}`));
         }
       });
+      break;
 
-      // Define a method to gracefully kill the process
-      recording.killGracefully = function () {
-        if (ffmpegProcess) {
-          ffmpegProcess.stdin.write('q\n');
-          ffmpegProcess.stdin.end();
-        } else {
-          console.error('FFmpeg process not started yet.');
-        }
-      };
+    case 'linux':
+      await startNodeRecording(width, height, fps, filePath);
+      break;
 
-      // Wait a bit to ensure recording has started
-      setTimeout(() => resolve(outputPath), 150);
-    } catch (error) {
-      recording = null;
-
-      if (onError) onError(error);
-
-      reject(new Error(`Failed to start recording: ${error.message}`));
-    }
-  });
+    default:
+      throw new Error(`Recording is not supported on this platform: ${process.platform}`);
+      break;
+  }
 };
 
 /**

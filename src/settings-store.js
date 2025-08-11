@@ -19,9 +19,9 @@ let settingsPath;
 
 // Initialize the settings path based on the app directory
 const initSettingsPath = () => {
-  const appPath = app.getAppPath();
+  const userDataPath = app.getPath("userData");
 
-  settingsPath = path.join(appPath, 'settings.json');
+  settingsPath = path.join(userDataPath, 'settings.json');
 };
 
 /**

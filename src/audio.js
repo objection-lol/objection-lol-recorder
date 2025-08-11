@@ -75,7 +75,7 @@ export const checkIfAudioDeviceExists = async () => {
   if (platform === 'linux') {
     try {
       // Check if pulseaudio is installed
-      const pulseCheck = spawn('which', ['pulseaudio']);
+      const pulseCheck = spawn('pactl', ['info']);
       return new Promise((resolve) => {
         pulseCheck.on('close', (code) => {
           resolve(code === 0);
