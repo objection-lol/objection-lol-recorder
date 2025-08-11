@@ -1,18 +1,18 @@
 **CONTENTS**
 
-1. [Introduction](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#objectionlol-recorder)
-2. [Installation](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#installation)
-   1. [Windows](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#windows)
-   2. [Linux](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#linux)
-      1. [Debian / Ubuntu / Linux Mint](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#debian--ubuntu--linux-mint)
-      2. [Fedora](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#fedora)
-      3. [Arch Linux / Manjaro](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#arch-linux--manjaro)
-      4. [openSUSE (Tumbleweed and Leap)](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#opensuse-tumbleweed-and-leap)
-      5. [Gentoo](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#gentoo)
-3. [Development](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#development)
-4. [Contributing](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#contributing)
-5. [License](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#license)
-6. [Acknowledgements](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#acknowledgments)
+1. [Introduction](https://github.com/objection-lol/objection-lol-recorder#objectionlol-recorder)
+2. [Installation](https://github.com/objection-lol/objection-lol-recorder#installation)
+   1. [Windows](https://github.com/objection-lol/objection-lol-recorder#windows)
+   2. [Linux](https://github.com/objection-lol/objection-lol-recorder#linux)
+      1. [Debian / Ubuntu / Linux Mint](https://github.com/objection-lol/objection-lol-recorder#debian--ubuntu--linux-mint)
+      2. [Fedora](https://github.com/objection-lol/objection-lol-recorder#fedora)
+      3. [Arch Linux / Manjaro](https://github.com/objection-lol/objection-lol-recorder#arch-linux--manjaro)
+      4. [openSUSE (Tumbleweed and Leap)](https://github.com/objection-lol/objection-lol-recorder#opensuse-tumbleweed-and-leap)
+      5. [Gentoo](https://github.com/objection-lol/objection-lol-recorder#gentoo)
+3. [Development](https://github.com/objection-lol/objection-lol-recorder#development)
+4. [Contributing](https://github.com/objection-lol/objection-lol-recorder#contributing)
+5. [License](https://github.com/objection-lol/objection-lol-recorder#license)
+6. [Acknowledgements](https://github.com/objection-lol/objection-lol-recorder#acknowledgments)
 
 # Objection.lol Recorder
 
