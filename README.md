@@ -32,7 +32,7 @@ A desktop application for recording videos from [objection.lol](https://objectio
 
 1. Download the latest release from the [Releases](https://github.com/objection-lol/objection-lol-recorder/releases) page
 2. Extract the ZIP file
-3. Run `objection-lol-recorder.exe`
+3. Run the installer, it will automatically install the recorder and add a shortcut to your desktop.
 
 The application includes its own bundled version of FFmpeg, so no additional installation is required for basic video recording.
 
