@@ -1,4 +1,5 @@
 **CONTENTS**
+
 1. [Introduction](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#objectionlol-recorder)
 2. [Installation](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#installation)
    1. [Windows](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#windows)
@@ -8,10 +9,10 @@
       3. [Arch Linux / Manjaro](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#arch-linux--manjaro)
       4. [openSUSE (Tumbleweed and Leap)](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#opensuse-tumbleweed-and-leap)
       5. [Gentoo](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#gentoo)
-4. [Development](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#development)
-5. [Contributing](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#contributing)
-6. [License](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#license)
-7. [Acknowledgements](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#acknowledgments)
+3. [Development](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#development)
+4. [Contributing](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#contributing)
+5. [License](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#license)
+6. [Acknowledgements](https://github.com/fleetoise/objection-lol-recorder/tree/linux-support?tab=readme-ov-file#acknowledgments)
 
 # Objection.lol Recorder
 
@@ -44,6 +45,7 @@ On Windows, to record with audio you'll need to install the virtual audio captur
 On Linux, make sure to either have pulseaudio or pipewire-pulseaudio installed.
 
 ### Linux
+
 On Linux, the program is provided as an AppImage. While this executable is distro-agnostic, it currently
 still requires you to install ffmpeg, and gstreamer with it's relevant codecs and plugins. You can contribute by
 packaging these tools in the AppImage.
@@ -139,7 +141,6 @@ emerge --ask media-libs/gstreamer \
   media-plugins/gst-plugins-libav
 ```
 
-
 ## Usage
 
 1. Enter an Objection ID (either the full URL like `https://objection.lol/objection/1` or just the ID number)
@@ -188,10 +189,8 @@ npm run package
 ## Platform Support
 
 - Windows: Fully supported
-- Linux: *Partially supported
+- Linux: Fully supported
 - MacOS: Currently unsupported, but contributions to add support are welcome.
-
-*: Custom delay in seconds is unsupported. Recording with audio and video is supported.
 
 ## Contributing
 
