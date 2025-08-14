@@ -105,13 +105,22 @@ function createProgressWindow() {
 }
 
 export async function startNodeRecording(width, height, fps, filePath) {
-  const pipeNode = await setupScreenCast();
-  const basePath = !app.isPackaged ? app.getAppPath() : path.join(process.resourcesPath, 'app.asar.unpacked');
-  const gstScriptPath = path.join(basePath, 'src', 'scripts', 'linuxrecorder');
-  recorder.recorderProcess = spawn('bash', [
-      gstScriptPath, pipeNode, width, height, filePath, fps
-    ]);
-  return
+  switch (process.ENV.XDG_SESSION_TYPE) {
+    case "wayland":
+      const pipeNode = await setupScreenCast();
+      const basePath = !app.isPackaged ? app.getAppPath() : path.join(process.resourcesPath, 'app.asar.unpacked');
+      const gstScriptPath = path.join(basePath, 'src', 'scripts', 'waylandrecorder');
+      recorder.recorderProcess = spawn('bash', [
+        gstScriptPath, pipeNode, width, height, filePath, fps
+      ]);
+      return
+      break;
+    case "x11":
+      return "placeholder"
+      break;
+    default:
+      break;
+  }
 }
 
 export async function stopNodeRecording() {

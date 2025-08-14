@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ "$#" -gt 1 ]; then
+  echo "Usage: $0 [FPS]" >&2
+  echo "Example: $0 30" >&2
+  exit 1
+fi
+
+FPS="${1:-30}"
+
+notify-send "Please select the window you want to record by clicking on it."
+WINDOW_INFO=$(xwininfo)
+
+CROP_X=$(echo "$WINDOW_INFO" | grep -oP 'Absolute upper-left X:\s+\K\d+')
+CROP_Y=$(echo "$WINDOW_INFO" | grep -oP 'Absolute upper-left Y:\s+\K\d+')
+CROP_W=$(echo "$WINDOW_INFO" | grep -oP 'Width:\s+\K\d+')
+CROP_H=$(echo "$WINDOW_INFO" | grep -oP 'Height:\s+\K\d+')
+
+if [ -z "$CROP_W" ] || [ -z "$CROP_H" ] || [ -z "$CROP_X" ] || [ -z "$CROP_Y" ]; then
+    echo "Could not determine window geometry. Please try again." >&2
+    exit 1
+fi
+
+DEFAULT_SINK=$(pactl get-default-sink)
+MONITOR_SRC="${DEFAULT_SINK}.monitor"
+DISPLAY_ID="$DISPLAY"
+
+timestamp=$(date '+%F_%H-%M-%S')
+OUT_DIR="$HOME/Documents/Recordings"
+mkdir -p "$OUT_DIR"
+OUT_FILE="$OUT_DIR/recording_window_$timestamp.mp4"
+
+
+ffmpeg -y \
+    -f x11grab \
+        -framerate "$FPS" \
+        -video_size "${CROP_W}x${CROP_H}" \
+        -i "${DISPLAY_ID}+${CROP_X},${CROP_Y}" \
+    -f pulse \
+        -i "$MONITOR_SRC" \
+    -c:v libx264 -preset superfast -tune zerolatency -crf 23 \
+    -c:a aac -b:a 192k \
+    -map 0:v:0 -map 1:a:0 \
+    "$OUT_FILE"
+
+
+echo "ALL DONE #!#!# saved to $OUT_FILE"
+
