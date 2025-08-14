@@ -25,10 +25,10 @@
       "node_modules/**/*",
       ".vite/build/**/*",
       ".vite/renderer/**/*",
-      "src/scripts/linuxrecorder"
+      "src/scripts/waylandrecorder"
     ],
     "asarUnpack": [
-      "src/scripts/linuxrecorder"
+      "src/scripts/waylandrecorder"
     ],
     "directories": {
       "buildResources": "build"
