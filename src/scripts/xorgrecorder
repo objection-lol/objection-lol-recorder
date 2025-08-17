@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ "$#" -ne 2 ]; then
+if [ "$#" -ne 5 ]; then
     exit 1
 fi
 
-VIDEO_NODE="$1"
+WINDOW_ID="$1"
 CROP_W="$2"
 CROP_H="$3"
 TMP="$4"
@@ -17,10 +17,6 @@ for cmd in gst-launch-1.0 pactl ffmpeg; do
     exit 1
   fi
 done
-
-if ! [[ "$WINDOW_ID" =~ ^[0-9]+$ ]]; then
-    exit 1
-fi
 
 MONITOR_SRC=$(pactl get-default-sink).monitor
 
@@ -40,6 +36,7 @@ ffmpeg -y -i "$TMP" \
   -vf "crop=${CROP_W}:${CROP_H}:0:0,setpts=PTS-STARTPTS" \
   -r "$FPS" -an "$CFR_TMP"
 
+OUT_DIR="$HOME/Documents/Recordings"
 timestamp=$(date '+%F_%H-%M-%S')
 OUT="$OUT_DIR/recording_window_${timestamp}.mp4"
 mkdir -p "$OUT_DIR"
@@ -63,4 +60,4 @@ fi
 rm -f "$TMP"
 rm -f "$CFR_TMP"
 
-echo "ALL DONE #!#!# SAVED TO $OUT_FILE"
+echo "ALL DONE #!#!# SAVED TO $OUT"
