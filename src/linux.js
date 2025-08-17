@@ -106,7 +106,7 @@ function createProgressWindow() {
 
 export async function startNodeRecording(width, height, fps, filePath) {
   const basePath = !app.isPackaged ? app.getAppPath() : path.join(process.resourcesPath, 'app.asar.unpacked');
-  switch (process.ENV.XDG_SESSION_TYPE) {
+  switch (process.env.XDG_SESSION_TYPE) {
     case "wayland":
       recorder.linuxDisplay = "wayland";
       const pipeNode = await setupScreenCast();
