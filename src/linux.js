@@ -5,7 +5,6 @@ import path from 'path';
 import { app, BrowserWindow, ipcMain } from 'electron';
 
 const util = require('util');
-
 const Variant = dbus.Variant;
 
 
@@ -73,6 +72,7 @@ async function startScreenCast(cast, sessionHandle, requestToken) {
 let recorder = {
   recorderProcess: null,
   progressWindow: null,
+  linuxDisplay: null,
 }
 
 function createProgressWindow() {
@@ -105,18 +105,23 @@ function createProgressWindow() {
 }
 
 export async function startNodeRecording(width, height, fps, filePath) {
+  const basePath = !app.isPackaged ? app.getAppPath() : path.join(process.resourcesPath, 'app.asar.unpacked');
   switch (process.ENV.XDG_SESSION_TYPE) {
     case "wayland":
+      recorder.linuxDisplay = "wayland";
       const pipeNode = await setupScreenCast();
-      const basePath = !app.isPackaged ? app.getAppPath() : path.join(process.resourcesPath, 'app.asar.unpacked');
-      const gstScriptPath = path.join(basePath, 'src', 'scripts', 'waylandrecorder');
+      const wScriptPath = path.join(basePath, 'src', 'scripts', 'waylandrecorder');
       recorder.recorderProcess = spawn('bash', [
-        gstScriptPath, pipeNode, width, height, filePath, fps
+        wScriptPath, pipeNode, width, height, filePath, fps
       ]);
       return
       break;
     case "x11":
-      return "placeholder"
+      recorder.linuxDisplay = "x11"
+      const xScriptPath = path.join(basePath, 'src', 'scripts', 'xorgrecorder');
+      recorder.recorderProcess = spawn('bash', [
+        xScriptPath, fps
+      ]);
       break;
     default:
       break;
@@ -124,14 +129,28 @@ export async function startNodeRecording(width, height, fps, filePath) {
 }
 
 export async function stopNodeRecording() {
-  const execPromise = util.promisify(exec);
-  await execPromise('pkill -SIGINT gst-launch-1.0');
-  createProgressWindow();
-  await new Promise((resolve) => {
-    recorder.recorderProcess.stdout.on('data', data => {
-      recorder.progressWindow.webContents.send('stdout-chunk', data.toString());
-    })
-    recorder.recorderProcess.on('close', resolve);
-  })
+  switch (recorder.linuxDisplay) {
+    case "wayland":
+      const execPromise = util.promisify(exec);
+      await execPromise('pkill -SIGINT gst-launch-1.0');
+      createProgressWindow();
+      await new Promise((resolve) => {
+        recorder.recorderProcess.stdout.on('data', data => {
+          recorder.progressWindow.webContents.send('stdout-chunk', data.toString());
+        })
+        recorder.recorderProcess.on('close', resolve);
+      })
+    break;
+    case "x11":
+      createProgressWindow();
+      await new Promise((resolve) => {
+        recorder.recorderProcess.stdout.on('data', data => {
+          recorder.progressWindow.webContents.send('stdout-chunk', data.toString());
+        })
+        recorder.recorderProcess.on('close', resolve);
+      })
+    default:
+      break;
+  }
 }
 

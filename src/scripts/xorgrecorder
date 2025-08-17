@@ -1,49 +1,43 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ "$#" -gt 1 ]; then
-  echo "Usage: $0 [FPS]" >&2
-  echo "Example: $0 30" >&2
-  exit 1
-fi
+DEFAULT_FPS=30
+FPS="${1:-$DEFAULT_FPS}"
+OUT_DIR="$HOME/Documents/Recordings"
 
-FPS="${1:-30}"
+for cmd in gst-launch-1.0 xdotool pactl; do
+  if ! command -v "$cmd" &> /dev/null; then
+    notify-send "Error: Required command '$cmd' is not installed."
+    notify-send "Please install it to continue."
+    exit 1
+  fi
+done
 
 notify-send "Please select the window you want to record by clicking on it."
-WINDOW_INFO=$(xwininfo)
+WINDOW_ID=$(xdotool selectwindow)
 
-CROP_X=$(echo "$WINDOW_INFO" | grep -oP 'Absolute upper-left X:\s+\K\d+')
-CROP_Y=$(echo "$WINDOW_INFO" | grep -oP 'Absolute upper-left Y:\s+\K\d+')
-CROP_W=$(echo "$WINDOW_INFO" | grep -oP 'Width:\s+\K\d+')
-CROP_H=$(echo "$WINDOW_INFO" | grep -oP 'Height:\s+\K\d+')
-
-if [ -z "$CROP_W" ] || [ -z "$CROP_H" ] || [ -z "$CROP_X" ] || [ -z "$CROP_Y" ]; then
-    echo "Could not determine window geometry. Please try again." >&2
+if ! [[ "$WINDOW_ID" =~ ^[0-9]+$ ]]; then
+    notify-send "Error: Invalid window selection. Please try again."
     exit 1
 fi
+echo "Selected window ID: $WINDOW_ID" > log.txt
 
-DEFAULT_SINK=$(pactl get-default-sink)
-MONITOR_SRC="${DEFAULT_SINK}.monitor"
-DISPLAY_ID="$DISPLAY"
-
-timestamp=$(date '+%F_%H-%M-%S')
-OUT_DIR="$HOME/Documents/Recordings"
 mkdir -p "$OUT_DIR"
-OUT_FILE="$OUT_DIR/recording_window_$timestamp.mp4"
+timestamp=$(date '+%F_%H-%M-%S')
+OUT_FILE="$OUT_DIR/objection_recording_${timestamp}.mp4"
+
+MONITOR_SRC=$(pactl get-default-sink).monitor
 
 
-ffmpeg -y \
-    -f x11grab \
-        -framerate "$FPS" \
-        -video_size "${CROP_W}x${CROP_H}" \
-        -i "${DISPLAY_ID}+${CROP_X},${CROP_Y}" \
-    -f pulse \
-        -i "$MONITOR_SRC" \
-    -c:v libx264 -preset superfast -tune zerolatency -crf 23 \
-    -c:a aac -b:a 192k \
-    -map 0:v:0 -map 1:a:0 \
-    "$OUT_FILE"
+gst-launch-1.0 -e \
+    ximagesrc window-id="$WINDOW_ID" use-damage=0 ! "video/x-raw,framerate=${FPS}/1" ! \
+    videoconvert ! \
+    x264enc speed-preset=ultrafast tune=zerolatency ! \
+    mp4mux name=mux ! \
+    filesink location="$OUT_FILE" \
+    pulsesrc device="$MONITOR_SRC" ! \
+    audioconvert ! \
+    avenc_aac ! \
+    mux.
 
-
-echo "ALL DONE #!#!# saved to $OUT_FILE"
-
+echo "ALL DONE #!#!# SAVED TO $OUT_FILE"
