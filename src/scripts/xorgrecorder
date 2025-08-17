@@ -1,9 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DEFAULT_FPS=30
-FPS="${1:-$DEFAULT_FPS}"
+
+FPS="$1"
+WINDOW_ID="$2"
 OUT_DIR="$HOME/Documents/Recordings"
+
+echo "Selected window ID: $WINDOW_ID" > log.txt
+
+if [ "$#" -ne 2 ]; then
+    notify-send "problem with the program's arguments encountered. Exiting"
+    exit 1
+fi
+
 
 for cmd in gst-launch-1.0 xdotool pactl; do
   if ! command -v "$cmd" &> /dev/null; then
@@ -14,13 +23,6 @@ for cmd in gst-launch-1.0 xdotool pactl; do
 done
 
 notify-send "Please select the window you want to record by clicking on it."
-WINDOW_ID=$(xdotool selectwindow)
-
-if ! [[ "$WINDOW_ID" =~ ^[0-9]+$ ]]; then
-    notify-send "Error: Invalid window selection. Please try again."
-    exit 1
-fi
-echo "Selected window ID: $WINDOW_ID" > log.txt
 
 mkdir -p "$OUT_DIR"
 timestamp=$(date '+%F_%H-%M-%S')
@@ -30,7 +32,7 @@ MONITOR_SRC=$(pactl get-default-sink).monitor
 
 
 gst-launch-1.0 -e \
-    ximagesrc window-id="$WINDOW_ID" use-damage=0 ! "video/x-raw,framerate=${FPS}/1" ! \
+    ximagesrc xid="$WINDOW_ID" use-damage=0 ! "video/x-raw,framerate=${FPS}/1" ! \
     videoconvert ! \
     x264enc speed-preset=ultrafast tune=zerolatency ! \
     mp4mux name=mux ! \

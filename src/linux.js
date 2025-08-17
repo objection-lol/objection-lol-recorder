@@ -1,6 +1,6 @@
 import dbus from '@jellybrick/dbus-next';
 import crypto from 'crypto';
-import { spawn, exec } from 'child_process';
+import { spawn, exec, execSync } from 'child_process';
 import path from 'path';
 import { app, BrowserWindow, ipcMain } from 'electron';
 
@@ -118,9 +118,11 @@ export async function startNodeRecording(width, height, fps, filePath) {
       break;
     case "x11":
       recorder.linuxDisplay = "x11"
+      const xdoSrc = execSync('xdotool selectwindow', { encoding: 'utf8' });
+      const windowId = xdoSrc.trim();
       const xScriptPath = path.join(basePath, 'src', 'scripts', 'xorgrecorder');
       recorder.recorderProcess = spawn('bash', [
-        xScriptPath, fps
+        xScriptPath, fps, windowId
       ]);
       break;
     default:
@@ -129,28 +131,14 @@ export async function startNodeRecording(width, height, fps, filePath) {
 }
 
 export async function stopNodeRecording() {
-  switch (recorder.linuxDisplay) {
-    case "wayland":
-      const execPromise = util.promisify(exec);
-      await execPromise('pkill -SIGINT gst-launch-1.0');
-      createProgressWindow();
-      await new Promise((resolve) => {
-        recorder.recorderProcess.stdout.on('data', data => {
-          recorder.progressWindow.webContents.send('stdout-chunk', data.toString());
-        })
-        recorder.recorderProcess.on('close', resolve);
-      })
-    break;
-    case "x11":
-      createProgressWindow();
-      await new Promise((resolve) => {
-        recorder.recorderProcess.stdout.on('data', data => {
-          recorder.progressWindow.webContents.send('stdout-chunk', data.toString());
-        })
-        recorder.recorderProcess.on('close', resolve);
-      })
-    default:
-      break;
-  }
+  const execPromise = util.promisify(exec);
+  await execPromise('pkill -SIGINT gst-launch-1.0');
+  createProgressWindow();
+  await new Promise((resolve) => {
+    recorder.recorderProcess.stdout.on('data', data => {
+      recorder.progressWindow.webContents.send('stdout-chunk', data.toString());
+    })
+    recorder.recorderProcess.on('close', resolve);
+  })
 }
 
