@@ -1,45 +1,66 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-
-FPS="$1"
-WINDOW_ID="$2"
-OUT_DIR="$HOME/Documents/Recordings"
-
-echo "Selected window ID: $WINDOW_ID" > log.txt
-
 if [ "$#" -ne 2 ]; then
-    notify-send "problem with the program's arguments encountered. Exiting"
     exit 1
 fi
 
+VIDEO_NODE="$1"
+CROP_W="$2"
+CROP_H="$3"
+TMP="$4"
+FPS="$5/1"
 
-for cmd in gst-launch-1.0 xdotool pactl; do
+for cmd in gst-launch-1.0 pactl ffmpeg; do
   if ! command -v "$cmd" &> /dev/null; then
-    notify-send "Error: Required command '$cmd' is not installed."
-    notify-send "Please install it to continue."
+    notify-send "$cmd not found"
     exit 1
   fi
 done
 
-notify-send "Please select the window you want to record by clicking on it."
-
-mkdir -p "$OUT_DIR"
-timestamp=$(date '+%F_%H-%M-%S')
-OUT_FILE="$OUT_DIR/objection_recording_${timestamp}.mp4"
+if ! [[ "$WINDOW_ID" =~ ^[0-9]+$ ]]; then
+    exit 1
+fi
 
 MONITOR_SRC=$(pactl get-default-sink).monitor
 
-
-gst-launch-1.0 -e \
-    ximagesrc xid="$WINDOW_ID" use-damage=0 ! "video/x-raw,framerate=${FPS}/1" ! \
+gst-launch-1.0 -q -e \
+  ximagesrc xid="$WINDOW_ID" do-timestamp=true ! queue ! \
     videoconvert ! \
-    x264enc speed-preset=ultrafast tune=zerolatency ! \
-    mp4mux name=mux ! \
-    filesink location="$OUT_FILE" \
-    pulsesrc device="$MONITOR_SRC" ! \
-    audioconvert ! \
-    avenc_aac ! \
-    mux.
+    video/x-raw,format=I420 ! \
+    x264enc pass=qual quantizer=0 speed-preset=superfast tune=zerolatency ! queue ! mux. \
+  pulsesrc device="$MONITOR_SRC" do-timestamp=true ! \
+    audio/x-raw,format=S16LE,channels=2,rate=48000 ! \
+    audioconvert ! audioresample ! opusenc ! queue ! mux. \
+  matroskamux name=mux ! filesink location="$TMP"
+
+
+CFR_TMP="/tmp/video_cfr.mp4"
+ffmpeg -y -i "$TMP" \
+  -vf "crop=${CROP_W}:${CROP_H}:0:0,setpts=PTS-STARTPTS" \
+  -r "$FPS" -an "$CFR_TMP"
+
+timestamp=$(date '+%F_%H-%M-%S')
+OUT="$OUT_DIR/recording_window_${timestamp}.mp4"
+mkdir -p "$OUT_DIR"
+
+ffmpeg -y -i "$CFR_TMP" -i "$TMP" \
+  -c:v copy \
+  -af "aresample" -c:a aac -b:a 192k \
+  -map 0:v:0 -map 1:a:0 \
+  "$OUT" > /dev/null 2>&1
+
+
+if [[ -z "$TMP" || "$TMP" == "/" || "$TMP" == "$HOME" ]]; then
+    echo "ATTENTION: Temporary path \$TMP is unsafe ('$TMP'). Aborting cleanup."
+    exit 1
+fi
+if [[ -z "$CFR_TMP" || "$CFR_TMP" == "/" || "$CFR_TMP" == "$HOME" ]]; then
+    echo "ATTENTION: Temporary path \$CFR_TMP is unsafe ('$CFR_TMP'). Aborting cleanup."
+    exit 1
+fi
+
+rm -f "$TMP"
+rm -f "$CFR_TMP"
 
 echo "ALL DONE #!#!# SAVED TO $OUT_FILE"

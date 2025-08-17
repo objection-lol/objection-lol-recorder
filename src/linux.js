@@ -122,7 +122,7 @@ export async function startNodeRecording(width, height, fps, filePath) {
       const windowId = xdoSrc.trim();
       const xScriptPath = path.join(basePath, 'src', 'scripts', 'xorgrecorder');
       recorder.recorderProcess = spawn('bash', [
-        xScriptPath, fps, windowId
+        xScriptPath, windowId, width, height, filePath, fps
       ]);
       break;
     default:
