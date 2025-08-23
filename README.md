@@ -72,6 +72,11 @@ sudo apt install -y ffmpeg \
   gstreamer1.0-libav
 ```
 
+If you are on Linux Mint or otherwise using Xorg server, you also need to install xdotool
+```bash
+sudo apt install -y xdotool
+```
+
 #### Fedora
 
 ```bash

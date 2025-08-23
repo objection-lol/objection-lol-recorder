@@ -118,8 +118,7 @@ export async function startNodeRecording(width, height, fps, filePath) {
       break;
     case "x11":
       recorder.linuxDisplay = "x11"
-      const xdoSrc = execSync('xdotool selectwindow', { encoding: 'utf8' });
-      const windowId = xdoSrc.trim();
+      const windowId = execSync('xdotool selectwindow', { encoding: 'utf8' });
       const xScriptPath = path.join(basePath, 'src', 'scripts', 'xorgrecorder');
       recorder.recorderProcess = spawn('bash', [
         xScriptPath, windowId, width, height, filePath, fps
