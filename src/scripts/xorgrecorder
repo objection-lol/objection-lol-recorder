@@ -1,0 +1,65 @@
+#!/usr/bin/env bas
+LOG="$HOME/Documents/objection-recorder.log"; exec 2> >(while IFS= read -r l; do printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$l" >>"$LOG"; done); trap 'printf "%s ERROR exit=%s cmd=%q line=%s\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$?" "$BASH_COMMAND" "$LINENO" >>"$LOG"' ERR; set -o errtrace -o pipefail
+
+if [ "$#" -ne 5 ]; then
+    exit 1
+fi
+
+WINDOW_ID="$1"
+CROP_W="$2"
+CROP_H="$3"
+TMP="$4"
+FPS="$5/1"
+
+echo "WINDOW_ID='$WINDOW_ID' (len=${#WINDOW_ID})" >> /tmp/xorgrecorder.log
+
+for cmd in gst-launch-1.0 pactl ffmpeg; do
+  if ! command -v "$cmd" &> /dev/null; then
+    notify-send "$cmd not found"
+    exit 1
+  fi
+done
+
+MONITOR_SRC=$(pactl get-default-sink).monitor
+
+gst-launch-1.0 -q -e \
+  ximagesrc xid="$WINDOW_ID" do-timestamp=true ! queue ! \
+    videoconvert ! \
+    video/x-raw,format=I420 ! \
+    x264enc pass=qual quantizer=0 speed-preset=superfast tune=zerolatency ! queue ! mux. \
+  pulsesrc device="$MONITOR_SRC" do-timestamp=true ! \
+    audio/x-raw,format=S16LE,channels=2,rate=48000 ! \
+    audioconvert ! audioresample ! opusenc ! queue ! mux. \
+  matroskamux name=mux ! filesink location="$TMP"
+
+
+CFR_TMP="/tmp/video_cfr.mp4"
+ffmpeg -y -i "$TMP" \
+  -vf "crop=${CROP_W}:${CROP_H}:0:0,setpts=PTS-STARTPTS" \
+  -r "$FPS" -an "$CFR_TMP"
+
+OUT_DIR="$HOME/Documents/Recordings"
+timestamp=$(date '+%F_%H-%M-%S')
+OUT="$OUT_DIR/recording_window_${timestamp}.mp4"
+mkdir -p "$OUT_DIR"
+
+ffmpeg -y -i "$CFR_TMP" -i "$TMP" \
+  -c:v copy \
+  -af "aresample" -c:a aac -b:a 192k \
+  -map 0:v:0 -map 1:a:0 \
+  "$OUT" > /dev/null 2>&1
+
+
+if [[ -z "$TMP" || "$TMP" == "/" || "$TMP" == "$HOME" ]]; then
+    echo "ATTENTION: Temporary path \$TMP is unsafe ('$TMP'). Aborting cleanup."
+    exit 1
+fi
+if [[ -z "$CFR_TMP" || "$CFR_TMP" == "/" || "$CFR_TMP" == "$HOME" ]]; then
+    echo "ATTENTION: Temporary path \$CFR_TMP is unsafe ('$CFR_TMP'). Aborting cleanup."
+    exit 1
+fi
+
+rm -f "$TMP"
+rm -f "$CFR_TMP"
+
+echo "ALL DONE #!#!# SAVED TO $OUT"

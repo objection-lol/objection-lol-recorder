@@ -1,11 +1,10 @@
 import dbus from '@jellybrick/dbus-next';
 import crypto from 'crypto';
-import { spawn, exec } from 'child_process';
+import { spawn, exec, execSync } from 'child_process';
 import path from 'path';
 import { app, BrowserWindow, ipcMain } from 'electron';
 
 const util = require('util');
-
 const Variant = dbus.Variant;
 
 
@@ -73,6 +72,7 @@ async function startScreenCast(cast, sessionHandle, requestToken) {
 let recorder = {
   recorderProcess: null,
   progressWindow: null,
+  linuxDisplay: null,
 }
 
 function createProgressWindow() {
@@ -105,13 +105,28 @@ function createProgressWindow() {
 }
 
 export async function startNodeRecording(width, height, fps, filePath) {
-  const pipeNode = await setupScreenCast();
   const basePath = !app.isPackaged ? app.getAppPath() : path.join(process.resourcesPath, 'app.asar.unpacked');
-  const gstScriptPath = path.join(basePath, 'src', 'scripts', 'linuxrecorder');
-  recorder.recorderProcess = spawn('bash', [
-      gstScriptPath, pipeNode, width, height, filePath, fps
-    ]);
-  return
+  switch (process.env.XDG_SESSION_TYPE) {
+    case "wayland":
+      recorder.linuxDisplay = "wayland";
+      const pipeNode = await setupScreenCast();
+      const wScriptPath = path.join(basePath, 'src', 'scripts', 'waylandrecorder');
+      recorder.recorderProcess = spawn('bash', [
+        wScriptPath, pipeNode, width, height, filePath, fps
+      ]);
+      return
+      break;
+    case "x11":
+      recorder.linuxDisplay = "x11"
+      const windowId = execSync('xdotool selectwindow', { encoding: 'utf8' });
+      const xScriptPath = path.join(basePath, 'src', 'scripts', 'xorgrecorder');
+      recorder.recorderProcess = spawn('bash', [
+        xScriptPath, windowId, width, height, filePath, fps
+      ]);
+      break;
+    default:
+      break;
+  }
 }
 
 export async function stopNodeRecording() {
