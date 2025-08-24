@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/usr/bin/env bas
+LOG="$HOME/Documents/objection-recorder.log"; exec 2> >(while IFS= read -r l; do printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$l" >>"$LOG"; done); trap 'printf "%s ERROR exit=%s cmd=%q line=%s\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$?" "$BASH_COMMAND" "$LINENO" >>"$LOG"' ERR; set -o errtrace -o pipefail
 
 if [ "$#" -ne 5 ]; then
     exit 1
