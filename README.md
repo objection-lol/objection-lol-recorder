@@ -46,6 +46,10 @@ On Linux, make sure to either have pulseaudio or pipewire-pulseaudio installed.
 
 ### Linux
 
+**If you have a Distribution with AppArmor (such as Linux Mint or Ubuntu)**, then you need to launch the recorder with --no-sandbox arguments.
+[You can create a .desktop file for convenience](https://wiki.archlinux.org/title/Desktop_entries#File_example)
+
+
 On Linux, the program is provided as an AppImage. While this executable is distro-agnostic, it currently
 still requires you to install ffmpeg, and gstreamer with it's relevant codecs and plugins. You can contribute by
 packaging these tools in the AppImage.

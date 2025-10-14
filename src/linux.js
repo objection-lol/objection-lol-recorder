@@ -117,12 +117,22 @@ export async function startNodeRecording(width, height, fps, filePath) {
       return
       break;
     case "x11":
-      recorder.linuxDisplay = "x11"
-      const windowId = execSync('xdotool selectwindow', { encoding: 'utf8' });
+      recorder.linuxDisplay = "x11";
+
+    const childEnv = {
+        ...process.env,
+        DISPLAY: process.env.DISPLAY || ':0',
+        XAUTHORITY: process.env.XAUTHORITY || path.join(require('os').homedir(), '.Xauthority')
+      };
+
+      const windowId = execSync('xdotool selectwindow', { encoding: 'utf8', env: childEnv });
       const xScriptPath = path.join(basePath, 'src', 'scripts', 'xorgrecorder');
+      console.log(windowId);
       recorder.recorderProcess = spawn('bash', [
-        xScriptPath, windowId, width, height, filePath, fps
-      ]);
+        '-l', xScriptPath, windowId.trim(), width, height, filePath, fps
+      ], {
+          env: childEnv
+      });
       break;
     default:
       break;
@@ -130,8 +140,7 @@ export async function startNodeRecording(width, height, fps, filePath) {
 }
 
 export async function stopNodeRecording() {
-  const execPromise = util.promisify(exec);
-  await execPromise('pkill -SIGINT gst-launch-1.0');
+  recorder.recorderProcess.kill('SIGINT');
   createProgressWindow();
   await new Promise((resolve) => {
     recorder.recorderProcess.stdout.on('data', data => {
@@ -140,4 +149,3 @@ export async function stopNodeRecording() {
     recorder.recorderProcess.on('close', resolve);
   })
 }
-

@@ -1,5 +1,6 @@
-#!/usr/bin/env bas
-LOG="$HOME/Documents/objection-recorder.log"; exec 2> >(while IFS= read -r l; do printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$l" >>"$LOG"; done); trap 'printf "%s ERROR exit=%s cmd=%q line=%s\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$?" "$BASH_COMMAND" "$LINENO" >>"$LOG"' ERR; set -o errtrace -o pipefail
+#!/usr/bin/env bash
+mkdir -p "$HOME/Documents/Recordings"
+LOG="$HOME/Documents/Recordings/objection-recorder.log"; exec 2> >(while IFS= read -r l; do printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$l" >>"$LOG"; done); trap 'printf "%s ERROR exit=%s cmd=%q line=%s\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$?" "$BASH_COMMAND" "$LINENO" >>"$LOG"' ERR; set -o errtrace -o pipefail
 
 if [ "$#" -ne 5 ]; then
     exit 1
@@ -11,7 +12,7 @@ CROP_H="$3"
 TMP="$4"
 FPS="$5/1"
 
-echo "WINDOW_ID='$WINDOW_ID' (len=${#WINDOW_ID})" >> /tmp/xorgrecorder.log
+echo "WINDOW_ID='$WINDOW_ID' (len=${#WINDOW_ID})" >> "$HOME/Documents/Recordings/window_id.log"
 
 for cmd in gst-launch-1.0 pactl ffmpeg; do
   if ! command -v "$cmd" &> /dev/null; then
@@ -30,7 +31,12 @@ gst-launch-1.0 -q -e \
   pulsesrc device="$MONITOR_SRC" do-timestamp=true ! \
     audio/x-raw,format=S16LE,channels=2,rate=48000 ! \
     audioconvert ! audioresample ! opusenc ! queue ! mux. \
-  matroskamux name=mux ! filesink location="$TMP"
+  matroskamux name=mux ! filesink location="$TMP" &
+
+GST_PID=$!
+
+trap "kill -SIGINT '$GST_PID'" SIGINT
+wait "$GST_PID"
 
 
 CFR_TMP="/tmp/video_cfr.mp4"

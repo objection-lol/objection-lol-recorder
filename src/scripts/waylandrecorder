@@ -23,9 +23,12 @@ gst-launch-1.0 -e \
   pulsesrc device="$MONITOR_SRC" do-timestamp=true ! queue ! \
     audio/x-raw,format=S16LE,channels=2,rate=48000 ! \
     audioconvert ! audioresample ! opusenc ! queue ! mux. \
-  matroskamux name=mux ! filesink location="$TMP" || true
+  matroskamux name=mux ! filesink location="$TMP" &
 
+GST_PID=$!
 
+trap "kill -SIGINT '$GST_PID'" SIGINT
+wait "$GST_PID"
 
 echo "Recording stopped. Starting FFmpeg processing..."
 echo "Processing 1: Converting video to a stable frame rate"
