@@ -110,7 +110,6 @@ export async function startNodeRecording(width, height, fps, filePath) {
       const wScriptPath = path.join(basePath, 'src', 'scripts', 'waylandrecorder');
       recorder.recorderProcess = spawn('bash', [wScriptPath, pipeNode, width, height, filePath, fps]);
       return;
-      break;
 
     case 'x11':
       recorder.linuxDisplay = 'x11';
