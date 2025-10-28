@@ -1,6 +1,6 @@
 import dbus from '@jellybrick/dbus-next';
 import crypto from 'crypto';
-import { spawn, exec, execSync } from 'child_process';
+import { spawn, execSync } from 'child_process';
 import path from 'path';
 import { app, BrowserWindow, ipcMain } from 'electron';
 
