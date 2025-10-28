@@ -46,6 +46,10 @@ On Linux, make sure to either have pulseaudio or pipewire-pulseaudio installed.
 
 ### Linux
 
+**If you have a Distribution with AppArmor (such as Linux Mint or Ubuntu)**, then you need to launch the recorder with --no-sandbox arguments.
+[You can create a .desktop file for convenience](https://wiki.archlinux.org/title/Desktop_entries#File_example)
+
+
 On Linux, the program is provided as an AppImage. While this executable is distro-agnostic, it currently
 still requires you to install ffmpeg, and gstreamer with it's relevant codecs and plugins. You can contribute by
 packaging these tools in the AppImage.
@@ -69,7 +73,13 @@ sudo apt install -y ffmpeg \
   gstreamer1.0-plugins-good \
   gstreamer1.0-plugins-bad \
   gstreamer1.0-plugins-ugly \
-  gstreamer1.0-libav
+  gstreamer1.0-libav \
+  pipewire-pulse
+```
+
+If you are on Linux Mint or otherwise using Xorg server, you also need to install xdotool
+```bash
+sudo apt install -y xdotool
 ```
 
 #### Fedora
@@ -82,7 +92,8 @@ sudo dnf install -y ffmpeg ffmpeg-libs \
   gstreamer1-plugins-bad-free \
   gstreamer1-plugins-bad-freeworld \
   gstreamer1-plugins-ugly \
-  gstreamer1-libav
+  gstreamer1-libav \
+  pipewire-pulseaudio
 ```
 
 > Note: `rpmfusion` repository is required for some of the plugins:
@@ -100,7 +111,8 @@ sudo pacman -Sy --noconfirm ffmpeg \
   gst-plugins-good \
   gst-plugins-bad \
   gst-plugins-ugly \
-  gst-libav
+  gst-libav \
+  pipewire-pulse
 ```
 
 #### openSUSE (Tumbleweed and Leap)
@@ -113,7 +125,8 @@ sudo zypper install -y ffmpeg-5 \
   gstreamer-plugins-good \
   gstreamer-plugins-bad \
   gstreamer-plugins-ugly \
-  gstreamer-libav
+  gstreamer-libav \
+  pipewire-pulseaudio
 ```
 
 > For proprietary codecs, add Packman repo:
@@ -129,6 +142,7 @@ Add the required USE flags in `/etc/portage/package.use`:
 
 ```bash
 echo "media-video/ffmpeg X aac alsa encode mp3 theora threads vorbis x264 x265" >> /etc/portage/package.use/ffmpeg
+echo "media-sound/pipewire pulseaudio" >> /etc/portage/package.use/pipewire
 ```
 
 ```bash
@@ -138,7 +152,8 @@ emerge --ask media-libs/gstreamer \
   media-plugins/gst-plugins-good \
   media-plugins/gst-plugins-bad \
   media-plugins/gst-plugins-ugly \
-  media-plugins/gst-plugins-libav
+  media-plugins/gst-plugins-libav \
+  media-sound/pipewire
 ```
 
 ## Usage
