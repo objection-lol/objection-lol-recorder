@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
+
 mkdir -p "$HOME/Documents/Recordings"
-LOG="$HOME/Documents/Recordings/objection-recorder.log"; exec 2> >(while IFS= read -r l; do printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$l" >>"$LOG"; done); trap 'printf "%s ERROR exit=%s cmd=%q line=%s\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$?" "$BASH_COMMAND" "$LINENO" >>"$LOG"' ERR; set -o errtrace -o pipefail
+LOG="$HOME/Documents/Recordings/objection-recorder.log"; trap 'printf "%s ERROR exit=%s cmd=%q line=%s\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$?" "$BASH_COMMAND" "$LINENO" >>"$LOG"' ERR; set -o errtrace -o pipefail
 
 if [ "$#" -ne 5 ]; then
     exit 1
@@ -9,7 +10,7 @@ fi
 WINDOW_ID="$1"
 CROP_W="$2"
 CROP_H="$3"
-TMP="$4"
+OUT="$4"
 FPS="$5/1"
 
 echo "WINDOW_ID='$WINDOW_ID' (len=${#WINDOW_ID})" >> "$HOME/Documents/Recordings/window_id.log"
@@ -21,10 +22,17 @@ for cmd in gst-launch-1.0 pactl ffmpeg; do
   fi
 done
 
+timestamp=$(date '+%F_%H-%M-%S')
+TMP="/tmp/recording_intermediate_${timestamp}_$$.mkv"
+CFR_TMP="/tmp/video_cfr_${timestamp}_$$.mp4"
+
+
 MONITOR_SRC=$(pactl get-default-sink).monitor
 
+echo "gst-launch-1.0 still recording"
+
 gst-launch-1.0 -q -e \
-  ximagesrc xid="$WINDOW_ID" do-timestamp=true ! queue ! \
+  ximagesrc xid="$WINDOW_ID" do-timestamp=true show-pointer=false ! queue ! \
     videoconvert ! \
     video/x-raw,format=I420 ! \
     x264enc pass=qual quantizer=0 speed-preset=superfast tune=zerolatency ! queue ! mux. \
@@ -39,28 +47,22 @@ trap "kill -SIGINT '$GST_PID'" SIGINT
 wait "$GST_PID"
 
 
-CFR_TMP="/tmp/video_cfr.mp4"
 ffmpeg -y -i "$TMP" \
   -vf "crop=${CROP_W}:${CROP_H}:0:0,setpts=PTS-STARTPTS" \
   -r "$FPS" -an "$CFR_TMP"
-
-OUT_DIR="$HOME/Documents/Recordings"
-timestamp=$(date '+%F_%H-%M-%S')
-OUT="$OUT_DIR/recording_window_${timestamp}.mp4"
-mkdir -p "$OUT_DIR"
 
 ffmpeg -y -i "$CFR_TMP" -i "$TMP" \
   -c:v copy \
   -af "aresample" -c:a aac -b:a 192k \
   -map 0:v:0 -map 1:a:0 \
-  "$OUT" > /dev/null 2>&1
+  "$OUT"
 
 
-if [[ -z "$TMP" || "$TMP" == "/" || "$TMP" == "$HOME" ]]; then
+if [[ -z "$TMP" || "$TMP" == "/" || "$TMP" == "$HOME" || ! "$TMP" == /tmp/* ]]; then
     echo "ATTENTION: Temporary path \$TMP is unsafe ('$TMP'). Aborting cleanup."
     exit 1
 fi
-if [[ -z "$CFR_TMP" || "$CFR_TMP" == "/" || "$CFR_TMP" == "$HOME" ]]; then
+if [[ -z "$CFR_TMP" || "$CFR_TMP" == "/" || "$CFR_TMP" == "$HOME" || ! "$CFR_TMP" == /tmp/* ]]; then
     echo "ATTENTION: Temporary path \$CFR_TMP is unsafe ('$CFR_TMP'). Aborting cleanup."
     exit 1
 fi
