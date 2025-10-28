@@ -30,7 +30,7 @@
     ],
     "asarUnpack": [
       "src/scripts/waylandrecorder",
-      "src/scripts/xorgrecorder"	
+      "src/scripts/xorgrecorder"
     ],
     "directories": {
       "buildResources": "build"
