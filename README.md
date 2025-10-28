@@ -33,16 +33,9 @@ A desktop application for recording videos from [objection.lol](https://objectio
 1. Download the latest release from the [Releases](https://github.com/objection-lol/objection-lol-recorder/releases) page
 2. Extract the ZIP file
 3. Run the installer, it will automatically install the recorder and add a shortcut to your desktop.
+4. To support audio recording, download and install [screen-capture-recorder](https://github.com/rdp/screen-capture-recorder-to-video-windows-free/releases)
 
-The application includes its own bundled version of FFmpeg, so no additional installation is required for basic video recording.
-
-### Audio Recording Setup
-
-On Windows, to record with audio you'll need to install the virtual audio capturer:
-
-1. Download and install [screen-capture-recorder](https://github.com/rdp/screen-capture-recorder-to-video-windows-free/releases)
-
-On Linux, make sure to either have pulseaudio or pipewire-pulseaudio installed.
+The application includes its own bundled version of FFmpeg, so no additional installation is required for video recording.
 
 ### Linux
 
