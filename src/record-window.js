@@ -1,9 +1,9 @@
 import { BaseWindow, WebContentsView } from 'electron';
 import fs from 'fs/promises';
+import { stopNodeRecording } from './linux';
 import { finalizeRecording, startRecording, stopRecording } from './recording';
 import { loadSettings } from './settings-store';
 import { audioTrimDuration, getRecordingUrl } from './utils';
-import { stopNodeRecording } from './linux';
 
 let recordWindow;
 let view;
@@ -159,7 +159,6 @@ export const createObjectionView = async (mainWindow, objectionId, params = {}) 
         },
         (recordingParams.appendSeconds + audioTrimDuration + 0.1) * 1000
       );
-
     }
   });
 
@@ -227,6 +226,7 @@ const measureRecordingElement = async (webContents) => {
       const element = document.getElementById('recording_target') || document.querySelector('.court-container');
       if (element) {
         const rect = element.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
         
         // Helper function to round values that are very close to integers
         const smartRound = (value) => {
@@ -235,9 +235,10 @@ const measureRecordingElement = async (webContents) => {
           return diff < 0.1 ? Math.round(value) : value;
         };
         
+        // Multiply by devicePixelRatio to get physical pixels
         return { 
-          width: smartRound(rect.width), 
-          height: smartRound(rect.height) 
+          width: smartRound(rect.width * dpr), 
+          height: smartRound(rect.height * dpr) 
         };
       }
       return { width: 0, height: 0 };
