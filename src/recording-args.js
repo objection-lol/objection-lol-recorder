@@ -138,7 +138,7 @@ export const getAudioInputArgs = (hasAudio) => {
 
   const { deviceName, inputFormat } = getPlatformAudioConfig();
 
-  return ['-f', inputFormat, '-i', `audio=${deviceName}`];
+  return ['-use_wallclock_as_timestamps', '1', '-f', inputFormat, '-i', `audio=${deviceName}`];
 };
 
 /**
@@ -151,7 +151,7 @@ export const getAudioEncodingArgs = (hasAudio) => {
     return [];
   }
 
-  return ['-b:a', '256k'];
+  return ['-af', 'aresample=async=1', '-b:a', '256k'];
 };
 
 /**
